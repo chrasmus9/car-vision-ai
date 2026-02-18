@@ -124,11 +124,37 @@ Deno.serve(async (req) => {
       jsonLd,
     };
 
-    // Extract price
-    const priceMatch = html.match(/Totalpris[\s\S]*?([\d\s]+)\s*kr/i) || 
-                       html.match(/([\d\s]+)\s*kr/);
-    if (priceMatch) {
-      (carData as any).price = priceMatch[1].replace(/\s/g, '').trim() + ' kr';
+    // Extract price - try multiple patterns (ordered by specificity)
+    const pricePatterns = [
+      /Totalpris[\s\S]{0,100}?([\d\s]{5,})\s*kr/i,
+      /Prisantydning[\s\S]{0,100}?([\d\s]{5,})\s*kr/i,
+      /Pris\s*eksl[^<]*?([\d\s]{5,})\s*kr/i,
+    ];
+    let priceFound = false;
+    for (const pattern of pricePatterns) {
+      const priceMatch = html.match(pattern);
+      if (priceMatch) {
+        const digits = priceMatch[1].replace(/\s/g, '').trim();
+        if (digits.length >= 5) {
+          (carData as any).price = digits + ' kr';
+          priceFound = true;
+          break;
+        }
+      }
+    }
+    if (!priceFound) {
+      // Fallback: find a large number (>=5 digits after removing spaces) near "kr", 
+      // but exclude "Omregistrering" context
+      const allPrices = [...html.matchAll(/([\d][\d\s]{4,}[\d])\s*kr/g)];
+      for (const m of allPrices) {
+        const contextBefore = html.substring(Math.max(0, m.index! - 50), m.index!);
+        if (/omregistrering/i.test(contextBefore)) continue;
+        const digits = m[1].replace(/\s/g, '').trim();
+        if (digits.length >= 5 && parseInt(digits) > 10000) {
+          (carData as any).price = digits + ' kr';
+          break;
+        }
+      }
     }
 
     // Extract equipment
