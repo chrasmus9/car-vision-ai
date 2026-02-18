@@ -1,4 +1,5 @@
-import { ExternalLink, MapPin, Calendar, Gauge, Fuel, Heart } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 
@@ -15,23 +16,93 @@ interface CarOverviewProps {
     location: string;
     finnCode: string;
     imageUrl: string;
+    images: string[];
   };
 }
 
 const CarOverview = ({ car }: CarOverviewProps) => {
+  const images = car.images?.length > 0 ? car.images : car.imageUrl ? [car.imageUrl] : [];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const prev = () => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1));
+  const next = () => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+
   return (
     <div className="space-y-5">
-      {/* Full-width image */}
+      {/* Image carousel */}
       <div className="relative w-full aspect-[16/9] md:aspect-[2.2/1] rounded-2xl overflow-hidden bg-muted">
-        <img
-          src={car.imageUrl}
-          alt={car.title}
-          className="w-full h-full object-cover"
-        />
+        {images.length > 0 && (
+          <img
+            src={images[currentIndex]}
+            alt={`${car.title} - bilde ${currentIndex + 1}`}
+            className="w-full h-full object-cover transition-opacity duration-300"
+          />
+        )}
+
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center hover:bg-background/80 transition-colors"
+              aria-label="Forrige bilde"
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-14 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center hover:bg-background/80 transition-colors"
+              aria-label="Neste bilde"
+            >
+              <ChevronRight className="w-5 h-5 text-foreground" />
+            </button>
+
+            {/* Dots indicator */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {images.slice(0, 12).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i === currentIndex
+                      ? "bg-background w-4"
+                      : "bg-background/50 hover:bg-background/70"
+                  }`}
+                  aria-label={`Bilde ${i + 1}`}
+                />
+              ))}
+              {images.length > 12 && (
+                <span className="text-xs text-background/70 ml-1">+{images.length - 12}</span>
+              )}
+            </div>
+
+            {/* Counter */}
+            <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-foreground/70 text-background text-xs font-medium backdrop-blur-sm">
+              {currentIndex + 1} / {images.length}
+            </span>
+          </>
+        )}
+
         <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center hover:bg-background/80 transition-colors">
           <Heart className="w-5 h-5 text-foreground" />
         </button>
       </div>
+
+      {/* Thumbnail strip */}
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {images.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentIndex(i)}
+              className={`shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                i === currentIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+            >
+              <img src={img} alt={`Thumbnail ${i + 1}`} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Details below image */}
       <div className="space-y-4">
