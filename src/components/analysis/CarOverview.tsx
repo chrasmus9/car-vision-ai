@@ -1,5 +1,6 @@
 import { ExternalLink, MapPin, Calendar, Gauge, Fuel, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/utils";
 
 interface CarOverviewProps {
   car: {
@@ -56,7 +57,7 @@ const CarOverview = ({ car }: CarOverviewProps) => {
         {/* Price */}
         <div>
           <p className="text-xs text-muted-foreground">Totalpris</p>
-          <p className="text-3xl font-bold text-foreground">{car.price}</p>
+          <p className="text-3xl font-bold text-foreground">{formatPrice(car.price)}</p>
         </div>
 
         {/* Quick specs row */}

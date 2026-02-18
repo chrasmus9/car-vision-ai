@@ -1,4 +1,5 @@
 import { Calendar, Fuel, Gauge, MapPin, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface CarCardProps {
   image: string;
@@ -41,7 +42,7 @@ const CarCard = ({ image, title, price, year, mileage, fuel, location, timeAgo, 
       <div className="p-4 space-y-3">
         <h3 className="font-semibold text-foreground truncate">{title}</h3>
         <div className="flex items-center gap-2">
-          <p className="text-lg font-bold text-foreground">{price}</p>
+          <p className="text-lg font-bold text-foreground">{formatPrice(price)}</p>
           {badge && (
           <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
               <badge.icon className="w-3.5 h-3.5" />
