@@ -56,27 +56,8 @@ const CarOverview = ({ car }: CarOverviewProps) => {
               <ChevronRight className="w-5 h-5 text-foreground" />
             </button>
 
-            {/* Dots indicator */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {images.slice(0, 12).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentIndex(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    i === currentIndex
-                      ? "bg-background w-4"
-                      : "bg-background/50 hover:bg-background/70"
-                  }`}
-                  aria-label={`Bilde ${i + 1}`}
-                />
-              ))}
-              {images.length > 12 && (
-                <span className="text-xs text-background/70 ml-1">+{images.length - 12}</span>
-              )}
-            </div>
-
             {/* Counter */}
-            <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-foreground/70 text-background text-xs font-medium backdrop-blur-sm">
+            <span className="absolute bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-foreground/70 text-background text-xs font-medium backdrop-blur-sm">
               {currentIndex + 1} / {images.length}
             </span>
           </>
@@ -86,23 +67,6 @@ const CarOverview = ({ car }: CarOverviewProps) => {
           <Heart className="w-5 h-5 text-foreground" />
         </button>
       </div>
-
-      {/* Thumbnail strip */}
-      {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentIndex(i)}
-              className={`shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${
-                i === currentIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
-              }`}
-            >
-              <img src={img} alt={`Thumbnail ${i + 1}`} className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Details below image */}
       <div className="space-y-4">
