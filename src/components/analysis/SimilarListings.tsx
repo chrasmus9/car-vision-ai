@@ -126,7 +126,6 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                     
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.sellerType || '–'}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.year}</td>
-                    <td className="px-4 py-3 text-sm text-foreground/80">{listing.year}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.mileage}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-foreground">
                       {listing.price.toLocaleString("nb-NO")} kr
