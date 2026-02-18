@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
     params.set('search_type', 'SEARCH_ID_CAR_USED');
     params.set('sort', 'PUBLISHED_DESC');
     
-    // Use body_search for make+model
     const query = `${make} ${model}`.trim();
     params.set('q', query);
     
@@ -34,6 +33,7 @@ Deno.serve(async (req) => {
         'Diesel': '2',
         'Bensin': '1',
         'Elektrisk': '4',
+        'El': '4',
         'Hybrid': '3',
         'Plugg-inn hybrid': '7',
       };
@@ -60,76 +60,71 @@ Deno.serve(async (req) => {
 
     const html = await response.text();
 
-    // Extract listings from search results
-    // Finn.no search results contain ad cards with prices and details
-    const listings: { title: string; price: number; year: string; mileage: string; finnCode: string; url: string }[] = [];
+    const listings: { title: string; price: number; year: string; mileage: string; finnCode: string; url: string; location: string }[] = [];
 
-    // Match ad items - look for price and title patterns in search results
-    // Finn uses structured data and specific patterns for their cards
-    const adBlocks = html.split(/data-testid="(?:ad-card|result-item)"/gi);
+    // Strategy: Find each listing link (/mobility/item/CODE), then scan forward
+    // in the HTML to find the price that belongs to that specific listing block.
+    // Finn.no structures results as blocks where the link and price are close together.
     
-    for (let i = 1; i < adBlocks.length && listings.length < 10; i++) {
-      const block = adBlocks[i];
-      
-      // Extract finn code from link
-      const linkMatch = block.match(/\/mobility\/item\/(\d+)/);
-      if (!linkMatch) continue;
-      
-      const finnCode = linkMatch[1];
-      
-      // Extract title
-      const titleMatch = block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/) || 
-                         block.match(/<a[^>]*aria-label="([^"]+)"/);
-      const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '').trim() : '';
-      
-      // Extract price - look for kr pattern
-      const priceMatch = block.match(/([\d\s]+)\s*kr/);
-      const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0;
-      
-      // Extract year
-      const yearMatch = block.match(/\b(19|20)\d{2}\b/);
-      const year = yearMatch ? yearMatch[0] : '';
-      
-      // Extract mileage
-      const mileageMatch = block.match(/([\d\s]+)\s*km/i);
-      const mileage = mileageMatch ? mileageMatch[1].trim() + ' km' : '';
+    // Find all item links with their positions
+    const linkPattern = /href="https:\/\/www\.finn\.no\/mobility\/item\/(\d+)"/g;
+    const linkMatches: { code: string; index: number }[] = [];
+    let linkMatch;
+    while ((linkMatch = linkPattern.exec(html)) !== null) {
+      const code = linkMatch[1];
+      // Skip duplicates (same code can appear multiple times)
+      if (!linkMatches.find(m => m.code === code)) {
+        linkMatches.push({ code, index: linkMatch.index });
+      }
+    }
 
-      if (price > 0 && title) {
+    // For each link, extract the surrounding block and find price within it
+    for (const item of linkMatches) {
+      if (listings.length >= 15) break;
+
+      // Take a chunk of HTML after the link (the listing card content follows the link)
+      const blockStart = Math.max(0, item.index - 500);
+      const blockEnd = Math.min(html.length, item.index + 2000);
+      const block = html.substring(blockStart, blockEnd);
+
+      // Extract title from the heading near this link
+      const titleMatch = block.match(new RegExp(`item/${item.code}"[^>]*>([^<]+)`)) ||
+                         block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
+      const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '').trim() : `${make} ${model}`;
+
+      // Find price - look for "X kr" pattern in the block AFTER the link
+      const afterLink = html.substring(item.index, item.index + 2000);
+      const priceMatch = afterLink.match(/([\d\s]{3,})\s*kr/);
+      const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0;
+
+      // Extract year and mileage from specs line (e.g. "2022 ∙ 75 000 km ∙ El")
+      const specsMatch = afterLink.match(/(20\d{2})\s*[∙·]\s*([\d\s]+)\s*km/);
+      const year = specsMatch ? specsMatch[1] : '';
+      const mileage = specsMatch ? specsMatch[2].trim() + ' km' : '';
+
+      // Extract location
+      const locationMatch = afterLink.match(/([A-ZÆØÅ][a-zæøåA-ZÆØÅ\s]+)\s*[∙·]\s*(?:Sulland|Bertel|VALO|Rebil|Car4|Bayern|Møller|Bilhuset|Birger|Motor|Auto|Forhandler|Merkeforhandler)/);
+      const location = locationMatch ? locationMatch[1].trim() : '';
+
+      if (price > 10000 && price < 10000000) {
         listings.push({
           title,
           price,
           year,
           mileage,
-          finnCode,
-          url: `https://www.finn.no/mobility/item/${finnCode}`,
+          finnCode: item.code,
+          url: `https://www.finn.no/mobility/item/${item.code}`,
+          location,
         });
       }
     }
 
-    // Fallback: try a different pattern if no results found
-    if (listings.length === 0) {
-      const itemMatches = [...html.matchAll(/\/mobility\/item\/(\d+)/g)];
-      const uniqueCodes = [...new Set(itemMatches.map(m => m[1]))];
-      
-      // Extract all prices from the page
-      const allPrices = [...html.matchAll(/([\d\s]{4,})\s*kr/g)];
-      
-      for (let i = 0; i < Math.min(uniqueCodes.length, allPrices.length, 10); i++) {
-        const price = parseInt(allPrices[i][1].replace(/\s/g, ''));
-        if (price > 10000 && price < 5000000) {
-          listings.push({
-            title: `${make} ${model}`,
-            price,
-            year: '',
-            mileage: '',
-            finnCode: uniqueCodes[i],
-            url: `https://www.finn.no/mobility/item/${uniqueCodes[i]}`,
-          });
-        }
-      }
-    }
-
     console.log(`Found ${listings.length} similar listings`);
+    
+    // Log first few for debugging
+    for (const l of listings.slice(0, 3)) {
+      console.log(`  ${l.finnCode}: ${l.title} - ${l.price} kr`);
+    }
 
     // Calculate stats
     const prices = listings.map(l => l.price).filter(p => p > 0);
