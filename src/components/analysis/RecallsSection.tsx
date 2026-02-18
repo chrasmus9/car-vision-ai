@@ -65,18 +65,15 @@ const RecallsSection = ({ recalls }: RecallsSectionProps) => {
 
           return (
             <div key={i} className="bg-card rounded-2xl border border-border card-shadow p-6 space-y-4">
-              <div className="flex items-start gap-3">
-                
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">{recall.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{recall.date} · <span className={severity.color}>{severity.label}</span></p>
-                </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">{recall.title}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{recall.date} · <span className={severity.color}>{severity.label}</span></p>
               </div>
 
-              <p className="text-sm text-foreground/80 leading-relaxed pl-8">{recall.description}</p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{recall.description}</p>
 
               {recall.advice && (
-                <div className="ml-8 bg-muted/50 rounded-xl p-4 space-y-2 border border-border/50">
+                <div className="bg-muted/50 rounded-xl p-4 space-y-2 border border-border/50">
                   <p className="text-xs font-semibold text-primary uppercase tracking-wide">Anbefaling</p>
                   <p className="text-sm font-medium text-foreground leading-relaxed">{recall.advice}</p>
                 </div>
