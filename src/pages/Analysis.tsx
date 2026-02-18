@@ -169,7 +169,7 @@ const Analysis = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <AnalysisLoading step={loadingStep} />
+        <AnalysisLoading step={loadingStep} carData={carData} />
         <Footer />
       </div>
     );
