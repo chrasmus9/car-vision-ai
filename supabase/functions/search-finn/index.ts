@@ -97,10 +97,12 @@ Deno.serve(async (req) => {
       const priceMatch = afterLink.match(/([\d\s]{3,})\s*kr/);
       const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0;
 
-      // Extract subtitle/generation – usually in a smaller element after the title
-      const subtitleMatch = afterLink.match(/<(?:span|p|div)[^>]*class="[^"]*subtitle[^"]*"[^>]*>([^<]+)/i) ||
-                            afterLink.match(/<h2[^>]*>[^<]*<\/h2>\s*(?:<[^>]*>)*\s*<(?:span|p|div)[^>]*>([^<]+)/i);
-      const subtitle = subtitleMatch ? subtitleMatch[1].trim() : '';
+      // Derive variant/subtitle by stripping make+model from the title
+      const makeModel = `${make} ${model}`.toLowerCase();
+      const titleLower = title.toLowerCase();
+      const subtitle = titleLower.startsWith(makeModel)
+        ? title.substring(makeModel.length).trim()
+        : '';
 
       // Extract year and mileage from specs line (e.g. "2022 ∙ 75 000 km ∙ El")
       const specsMatch = afterLink.match(/(20\d{2})\s*[∙·]\s*([\d\s]+)\s*km/);
