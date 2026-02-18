@@ -36,6 +36,7 @@ export interface CarData {
   location: string;
   finnCode: string;
   imageUrl: string;
+  images: string[];
   euExpiry: string;
   equipment: string[];
 }
@@ -107,6 +108,7 @@ const Analysis = () => {
           location: specs.location || "",
           finnCode: url.match(/(\d{9,})/)?.[1] || "",
           imageUrl: raw.images?.[0] || "",
+          images: raw.images || [],
           euExpiry: "",
           equipment: raw.equipment || [],
         };

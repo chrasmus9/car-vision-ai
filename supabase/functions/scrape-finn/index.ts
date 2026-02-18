@@ -82,8 +82,11 @@ Deno.serve(async (req) => {
       .substring(0, 8000);
 
     // Extract images
-    const imageMatches = [...html.matchAll(/images\.finncdn\.no\/dynamic\/[^"'\s]*/g)];
-    const images = [...new Set(imageMatches.map(m => `https://${m[0]}`))].slice(0, 5);
+    // Extract images - find all unique item image UUIDs and build high-res URLs
+    const imageIdMatches = [...html.matchAll(/images\.finncdn\.no\/dynamic\/[^"'\s]*\/item\/(\d+)\/([a-f0-9-]+)/g)];
+    const uniqueImageIds = [...new Set(imageIdMatches.map(m => m[2]))];
+    const finnCode = finnUrl.match(/(\d{9,})/)?.[1] || imageIdMatches[0]?.[1] || '';
+    const images = uniqueImageIds.map(id => `https://images.finncdn.no/dynamic/1600w/item/${finnCode}/${id}`).slice(0, 20);
 
     // Extract specs from the page
     const specsSection = html.match(/Spesifikasjoner[\s\S]*?(?=Utstyr|Beskrivelse|$)/i)?.[0] || '';
