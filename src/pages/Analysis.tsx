@@ -4,8 +4,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CarOverview from "@/components/analysis/CarOverview";
 import RiskAssessment from "@/components/analysis/RiskAssessment";
-// SmartQuestions removed - questions now integrated into RiskAssessment
 import PriceAnalysis from "@/components/analysis/PriceAnalysis";
+import SimilarListings from "@/components/analysis/SimilarListings";
 import SpecsGrid from "@/components/analysis/SpecsGrid";
 import EquipmentList from "@/components/analysis/EquipmentList";
 import AISummary from "@/components/analysis/AISummary";
@@ -219,13 +219,40 @@ const Analysis = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Hero: Car overview */}
         <CarOverview car={carData} />
+
+        {/* AI Summary */}
         {analysis && <AISummary summary={analysis.summary} />}
-        {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} similarListings={similarListings} priceStats={priceStats} isLoadingSimilar={isLoadingSimilar} />}
-        {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+
+        {/* Price + Recalls side by side on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {priceNum > 0 && (
+            <PriceAnalysis
+              price={priceNum}
+              assessment={analysis?.priceAssessment}
+              priceStats={priceStats}
+              isLoadingSimilar={isLoadingSimilar}
+            />
+          )}
+          {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+        </div>
+
+        {/* Similar listings — full width card grid */}
+        <SimilarListings
+          listings={similarListings}
+          currentPrice={priceNum}
+          isLoading={isLoadingSimilar}
+        />
+
+        {/* Risk assessment */}
         {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
-        <SpecsGrid car={carData} />
-        {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}
+
+        {/* Specs + Equipment side by side on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SpecsGrid car={carData} />
+          {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}
+        </div>
       </main>
       <Footer />
     </div>
