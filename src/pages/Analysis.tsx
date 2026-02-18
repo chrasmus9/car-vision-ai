@@ -145,7 +145,7 @@ const Analysis = () => {
         const priceNum = parseInt(car.price.replace(/\D/g, "")) || 0;
         let priceDiffPercent: number | null = null;
         if (searchResult?.success && searchResult.data.stats?.avg && priceNum > 0) {
-          priceDiffPercent = Math.round(((priceNum - searchResult.data.stats.avg) / searchResult.data.stats.avg) * 1000) / 10;
+          priceDiffPercent = Math.round(((priceNum - searchResult.data.stats.avg) / searchResult.data.stats.avg) * 100);
         }
 
         await supabase.from("recent_analyses").upsert({
