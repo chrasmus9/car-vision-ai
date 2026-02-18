@@ -42,7 +42,7 @@ const PriceAnalysis = ({ price, assessment, similarListings, priceStats, isLoadi
   return (
     <div className="bg-card rounded-2xl border border-border card-shadow p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+        <h2 className="text-lg font-semibold text-foreground">
           Prisanalyse
         </h2>
         {indicator && (
