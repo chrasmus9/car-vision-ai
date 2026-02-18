@@ -82,9 +82,9 @@ Deno.serve(async (req) => {
     for (const item of linkMatches) {
       if (listings.length >= 15) break;
 
-      // Take a chunk of HTML after the link (the listing card content follows the link)
-      const blockStart = Math.max(0, item.index - 500);
-      const blockEnd = Math.min(html.length, item.index + 2000);
+      // Take a larger chunk around the link to capture subtitle/specs
+      const blockStart = Math.max(0, item.index - 1000);
+      const blockEnd = Math.min(html.length, item.index + 3000);
       const block = html.substring(blockStart, blockEnd);
 
       // Extract title from the heading near this link
@@ -106,7 +106,14 @@ Deno.serve(async (req) => {
       const locationMatch = afterLink.match(/([A-ZÆØÅ][a-zæøåA-ZÆØÅ\s]+)\s*[∙·]\s*(?:Sulland|Bertel|VALO|Rebil|Car4|Bayern|Møller|Bilhuset|Birger|Motor|Auto|Forhandler|Merkeforhandler)/);
       const location = locationMatch ? locationMatch[1].trim() : '';
 
-      if (price > 10000 && price < 10000000) {
+      // Filter: only include listings that match the model name
+      // Use a tighter window around the link to avoid matching neighbor listings
+      const modelLower = model.toLowerCase();
+      const tightBlock = html.substring(item.index, Math.min(html.length, item.index + 1500)).toLowerCase();
+      const noSpaceModel = model.replace(/\s+/g, '').toLowerCase();
+      const matchesModel = tightBlock.includes(modelLower) || tightBlock.includes(noSpaceModel);
+
+      if (price > 10000 && price < 10000000 && matchesModel) {
         listings.push({
           title,
           price,
