@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
         price: doc.price?.amount || 0,
         year: String(doc.year || ''),
         mileage: doc.mileage ? `${doc.mileage.toLocaleString('nb-NO')} km` : '',
-        drivetrain: doc.wheel_drive || doc.drivetrain || '',
+        fuel: doc.fuel || '',
         gearbox: doc.transmission || doc.gearbox || '',
         finnCode: String(doc.id || doc.ad_id || ''),
         url: doc.canonical_url || `https://www.finn.no/mobility/item/${doc.id}`,

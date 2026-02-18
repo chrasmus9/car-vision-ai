@@ -6,7 +6,7 @@ interface SimilarListing {
   price: number;
   year: string;
   mileage: string;
-  drivetrain: string;
+  fuel: string;
   gearbox: string;
   finnCode: string;
   url: string;
@@ -18,7 +18,7 @@ interface SimilarListingsProps {
   isLoading?: boolean;
 }
 
-type SortKey = "title" | "drivetrain" | "gearbox" | "year" | "mileage" | "price" | "diff";
+type SortKey = "title" | "fuel" | "gearbox" | "year" | "mileage" | "price" | "diff";
 type SortDir = "asc" | "desc";
 
 const parseMileage = (m: string) => parseInt(m.replace(/\D/g, "")) || 0;
@@ -53,7 +53,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
     let cmp = 0;
     switch (sortKey) {
       case "title": cmp = a.title.localeCompare(b.title); break;
-      case "drivetrain": cmp = a.drivetrain.localeCompare(b.drivetrain); break;
+      case "fuel": cmp = a.fuel.localeCompare(b.fuel); break;
       case "gearbox": cmp = a.gearbox.localeCompare(b.gearbox); break;
       case "year": cmp = (parseInt(a.year) || 0) - (parseInt(b.year) || 0); break;
       case "mileage": cmp = parseMileage(a.mileage) - parseMileage(b.mileage); break;
@@ -84,7 +84,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
               <tr className="border-b border-border">
                 {([
                   { key: "title" as SortKey, label: "Bil" },
-                  { key: "drivetrain" as SortKey, label: "Hjuldrift" },
+                  { key: "fuel" as SortKey, label: "Drivstoff" },
                   { key: "gearbox" as SortKey, label: "Girkasse" },
                   { key: "year" as SortKey, label: "År" },
                   { key: "mileage" as SortKey, label: "Km" },
@@ -126,7 +126,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                       </a>
                     </td>
                     
-                    <td className="px-4 py-3 text-sm text-foreground/80">{listing.drivetrain || '–'}</td>
+                    <td className="px-4 py-3 text-sm text-foreground/80">{listing.fuel || '–'}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.gearbox || '–'}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.year}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.mileage}</td>
