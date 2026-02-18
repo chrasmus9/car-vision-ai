@@ -1,9 +1,9 @@
-import { AlertTriangle, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export interface Recall {
   title: string;
-  status: "active" | "expired" | "completed";
+  status?: string;
   date: string;
   description: string;
   severity: "high" | "medium" | "low";
@@ -14,16 +14,16 @@ interface RecallsSectionProps {
   recalls: Recall[];
 }
 
-const statusConfig = {
-  active: { label: "Aktiv", icon: ShieldAlert, className: "border-red-500/30 text-red-500 bg-red-500/10" },
-  expired: { label: "Utløpt", icon: Clock, className: "border-amber-500/30 text-amber-500 bg-amber-500/10" },
-  completed: { label: "Utbedret", icon: CheckCircle2, className: "border-emerald-500/30 text-emerald-500 bg-emerald-500/10" },
-};
-
 const severityConfig = {
   high: { label: "Alvorlig", color: "text-red-500" },
   medium: { label: "Moderat", color: "text-amber-500" },
   low: { label: "Mindre", color: "text-emerald-500" },
+};
+
+const severityIcon = {
+  high: "🔴",
+  medium: "🟡",
+  low: "🟢",
 };
 
 const RecallsSection = ({ recalls }: RecallsSectionProps) => {
@@ -38,46 +38,39 @@ const RecallsSection = ({ recalls }: RecallsSectionProps) => {
           <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
           <p className="text-sm text-foreground/80">Ingen kjente tilbakekallinger funnet for denne modellen og årsmodellen.</p>
         </div>
+        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <p>Basert på AI-analyse. Verifiser alltid hos <a href="https://www.vegvesen.no" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Statens vegvesen</a> for offisielle tilbakekallinger.</p>
+        </div>
       </div>
     );
   }
-
-  const activeCount = recalls.filter(r => r.status === "active").length;
 
   return (
     <div className="space-y-4">
       <div className="space-y-1">
         <div className="flex items-center gap-3">
           <h2 className="text-xl text-foreground">Tilbakekallinger</h2>
-          {activeCount > 0 && (
-            <Badge variant="outline" className="gap-1.5 border-red-500/30 text-red-500 bg-red-500/10">
-              <AlertTriangle className="w-3 h-3" />
-              {activeCount} aktiv{activeCount > 1 ? "e" : ""}
-            </Badge>
-          )}
+          <Badge variant="outline" className="gap-1.5 text-xs">
+            <AlertTriangle className="w-3 h-3" />
+            {recalls.length} funnet
+          </Badge>
         </div>
         <p className="text-sm text-muted-foreground">Kjente tilbakekallinger for denne modellen</p>
       </div>
 
       <div className="space-y-4">
         {recalls.map((recall, i) => {
-          const status = statusConfig[recall.status] || statusConfig.completed;
           const severity = severityConfig[recall.severity] || severityConfig.medium;
-          const StatusIcon = status.icon;
 
           return (
             <div key={i} className="bg-card rounded-2xl border border-border card-shadow p-6 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <StatusIcon className={`w-5 h-5 shrink-0 mt-0.5 ${recall.status === "active" ? "text-red-500" : recall.status === "expired" ? "text-amber-500" : "text-emerald-500"}`} />
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">{recall.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{recall.date} · <span className={severity.color}>{severity.label}</span></p>
-                  </div>
+              <div className="flex items-start gap-3">
+                <span className="text-sm mt-0.5">{severityIcon[recall.severity] || "🟡"}</span>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">{recall.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{recall.date} · <span className={severity.color}>{severity.label}</span></p>
                 </div>
-                <Badge variant="outline" className={`shrink-0 text-xs ${status.className}`}>
-                  {status.label}
-                </Badge>
               </div>
 
               <p className="text-sm text-foreground/80 leading-relaxed pl-8">{recall.description}</p>
@@ -91,6 +84,11 @@ const RecallsSection = ({ recalls }: RecallsSectionProps) => {
             </div>
           );
         })}
+      </div>
+
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+        <p>Basert på AI-analyse og kan inneholde unøyaktigheter. Verifiser alltid hos <a href="https://www.vegvesen.no" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Statens vegvesen</a> for offisielle tilbakekallinger.</p>
       </div>
     </div>
   );
