@@ -58,6 +58,9 @@ const Analysis = () => {
   const [carData, setCarData] = useState<CarData | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [similarListings, setSimilarListings] = useState<any[]>([]);
+  const [priceStats, setPriceStats] = useState<any>(null);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
   useEffect(() => {
     if (!url) {
@@ -110,17 +113,42 @@ const Analysis = () => {
 
         setCarData(car);
 
-        // Step 2: AI Analysis
+        // Step 2: AI Analysis + Search similar in parallel
         setLoadingStep("analyzing");
-        const { data: aiResult, error: aiError } = await supabase.functions.invoke("analyze-car", {
-          body: { carData: { ...car, textContent: raw.textContent } },
-        });
+        
+        const [aiResponse, searchResponse] = await Promise.all([
+          supabase.functions.invoke("analyze-car", {
+            body: { carData: { ...car, textContent: raw.textContent } },
+          }),
+          supabase.functions.invoke("search-finn", {
+            body: {
+              make: specs.make,
+              model: specs.model,
+              yearFrom: parseInt(specs.year) ? parseInt(specs.year) - 2 : undefined,
+              yearTo: parseInt(specs.year) ? parseInt(specs.year) + 2 : undefined,
+              fuel: specs.fuel,
+            },
+          }),
+        ]);
+
+        const { data: aiResult, error: aiError } = aiResponse;
+        const { data: searchResult } = searchResponse;
 
         if (aiError || !aiResult?.success) {
           throw new Error(aiResult?.error || aiError?.message || "AI-analyse feilet");
         }
 
         setAnalysis(aiResult.data);
+
+        if (searchResult?.success) {
+          // Filter out the current listing
+          const currentFinnCode = url.match(/(\d{9,})/)?.[1];
+          const filtered = (searchResult.data.listings || []).filter(
+            (l: any) => l.finnCode !== currentFinnCode
+          );
+          setSimilarListings(filtered);
+          setPriceStats(searchResult.data.stats);
+        }
       } catch (err: any) {
         console.error("Analysis error:", err);
         setError(err.message);
@@ -171,7 +199,7 @@ const Analysis = () => {
         {analysis && <AISummary summary={analysis.summary} />}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {analysis && <RiskAssessment risks={analysis.risks} />}
-          {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} />}
+          {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} similarListings={similarListings} priceStats={priceStats} isLoadingSimilar={isLoadingSimilar} />}
         </div>
         {analysis && <SmartQuestions questions={analysis.questions} />}
         <SpecsGrid car={carData} />
