@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
         price: doc.price?.amount || 0,
         year: String(doc.year || ''),
         mileage: doc.mileage ? `${doc.mileage.toLocaleString('nb-NO')} km` : '',
-        sellerType: doc.dealer_segment ? 'Forhandler' : (doc.organisation_name ? 'Forhandler' : 'Privat'),
+        sellerType: doc.dealer_segment === 'Privat' ? 'Privat' : (doc.dealer_segment ? 'Forhandler' : (doc.organisation_name ? 'Forhandler' : 'Privat')),
         finnCode: String(doc.id || doc.ad_id || ''),
         url: doc.canonical_url || `https://www.finn.no/mobility/item/${doc.id}`,
         location: doc.location || '',
@@ -72,11 +72,19 @@ Deno.serve(async (req) => {
     if (docs.length > 0) {
       const sample = docs[0];
       console.log('Sample doc keys:', Object.keys(sample).join(', '));
-      console.log('Sample doc partial:', JSON.stringify({
-        transmission: sample.transmission, gearbox: sample.gearbox,
-        wheel_drive: sample.wheel_drive, drivetrain: sample.drivetrain,
-        drive: sample.drive, four_wheel_drive: sample.four_wheel_drive,
+      console.log('Seller fields:', JSON.stringify({
+        dealer_segment: sample.dealer_segment,
+        organisation_name: sample.organisation_name,
+        ad_type: sample.ad_type,
+        sales_form: sample.sales_form,
+        dealer_group_id: sample.dealer_group_id,
       }));
+      // Log a few docs to see variation
+      docs.slice(0, 5).forEach((d: any, i: number) => {
+        console.log(`Doc ${i} seller:`, JSON.stringify({
+          ds: d.dealer_segment, org: d.organisation_name, ad: d.ad_type, sf: d.sales_form
+        }));
+      });
     }
 
     // Calculate stats
