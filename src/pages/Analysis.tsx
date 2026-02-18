@@ -89,7 +89,7 @@ const Analysis = () => {
 
         const car: CarData = {
           title: raw.title || "Ukjent bil",
-          subtitle: "",
+          subtitle: raw.subtitle || "",
           price: raw.price || "Ikke oppgitt",
           year: parseInt(specs.year) || 0,
           mileage: specs.mileage || "Ikke oppgitt",
