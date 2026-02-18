@@ -68,6 +68,10 @@ Deno.serve(async (req) => {
     const title = extract(/<h1[^>]*>([\s\S]*?)<\/h1>/) || 
                   extract(/<title>(.*?)<\/title>/);
 
+    // Extract subtitle – on Finn it's typically the element right after the h1
+    const subtitleMatch = html.match(/<h1[^>]*>[\s\S]*?<\/h1>\s*(?:<[^>]*>)*\s*<(?:p|span|div)[^>]*>([\s\S]*?)<\/(?:p|span|div)>/i);
+    const subtitle = subtitleMatch ? subtitleMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+
     // Extract description
     const descMatch = html.match(/Beskrivelse[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/i);
     const description = descMatch ? descMatch[1].replace(/<[^>]*>/g, '').trim() : '';
@@ -120,6 +124,7 @@ Deno.serve(async (req) => {
 
     const carData = {
       title: title.replace(/<[^>]*>/g, '').trim(),
+      subtitle,
       url: finnUrl,
       images,
       textContent,
