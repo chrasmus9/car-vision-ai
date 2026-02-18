@@ -30,6 +30,26 @@ const categoryIcons: Record<string, typeof Wrench> = {
   Sikkerhet: Shield,
 };
 
+const getHighlightEmoji = (text: string): string => {
+  const t = text.toLowerCase();
+  if (t.includes("pris") || t.includes("gunstig") || t.includes("inngang") || t.includes("finans") || t.includes("rente")) return "💰";
+  if (t.includes("garanti") || t.includes("reklamasjon")) return "🛡️";
+  if (t.includes("service") || t.includes("vedlikehold")) return "🔧";
+  if (t.includes("forhandler") || t.includes("merke") || t.includes("selger") || t.includes("bytterett")) return "🏪";
+  if (t.includes("eu") || t.includes("kontroll")) return "✅";
+  if (t.includes("batteri") || t.includes("elektrisk") || t.includes("rekkevidde") || t.includes("ladehastighet")) return "🔋";
+  if (t.includes("utstyr") || t.includes("utstyrt") || t.includes("lyd") || t.includes("seter")) return "✨";
+  if (t.includes("firehjul") || t.includes("awd") || t.includes("4wd") || t.includes("drift")) return "🏔️";
+  if (t.includes("tilhenger") || t.includes("hengerfeste")) return "🪝";
+  if (t.includes("vinter") || t.includes("dekk")) return "❄️";
+  if (t.includes("lakk") || t.includes("coating") || t.includes("karosseri")) return "🎨";
+  if (t.includes("km") || t.includes("kjørelengde") || t.includes("kilometerstand")) return "🛣️";
+  if (t.includes("eier") || t.includes("velholdt")) return "👤";
+  if (t.includes("plass") || t.includes("bagasje") || t.includes("romslig")) return "📦";
+  if (t.includes("sikkerhet") || t.includes("kollisjon") || t.includes("brems")) return "🛑";
+  return "⭐";
+};
+
 const RiskAssessment = ({ risks, highlights }: RiskAssessmentProps) => {
   const highCount = risks.filter(r => r.level === "high").length;
   const medCount = risks.filter(r => r.level === "medium").length;
@@ -66,7 +86,7 @@ const RiskAssessment = ({ risks, highlights }: RiskAssessmentProps) => {
           <div className="flex flex-wrap gap-2">
             {highlights.map((h, i) => (
               <Badge key={i} variant="outline" className="gap-2 px-3 py-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-sm">{getHighlightEmoji(h)}</span>
                 {h}
               </Badge>
             ))}
