@@ -17,7 +17,7 @@ interface SimilarListingsProps {
   isLoading?: boolean;
 }
 
-type SortKey = "title" | "year" | "mileage" | "price" | "diff";
+type SortKey = "title" | "subtitle" | "year" | "mileage" | "price" | "diff";
 type SortDir = "asc" | "desc";
 
 const parseMileage = (m: string) => parseInt(m.replace(/\D/g, "")) || 0;
@@ -52,6 +52,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
     let cmp = 0;
     switch (sortKey) {
       case "title": cmp = a.title.localeCompare(b.title); break;
+      case "subtitle": cmp = (a.subtitle || '').localeCompare(b.subtitle || ''); break;
       case "year": cmp = (parseInt(a.year) || 0) - (parseInt(b.year) || 0); break;
       case "year": cmp = (parseInt(a.year) || 0) - (parseInt(b.year) || 0); break;
       case "mileage": cmp = parseMileage(a.mileage) - parseMileage(b.mileage); break;
@@ -82,6 +83,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
               <tr className="border-b border-border">
                 {([
                   { key: "title" as SortKey, label: "Bil" },
+                  { key: "subtitle" as SortKey, label: "Variant" },
                   { key: "year" as SortKey, label: "År" },
                   { key: "mileage" as SortKey, label: "Km" },
                   { key: "price" as SortKey, label: "Pris" },
@@ -122,6 +124,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                       </a>
                     </td>
                     
+                    <td className="px-4 py-3 text-sm text-foreground/80 max-w-[220px] truncate" title={listing.subtitle || ''}>{listing.subtitle || '–'}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.year}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.mileage}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-foreground">
