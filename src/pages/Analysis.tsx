@@ -140,11 +140,24 @@ const Analysis = () => {
 
         setAnalysis(aiResult.data);
 
+        // Save to recent analyses
+        const finnCode = url.match(/(\d{9,})/)?.[1] || "";
+        await supabase.from("recent_analyses").upsert({
+          finn_code: finnCode,
+          title: car.title,
+          price: car.price,
+          year: String(car.year),
+          mileage: car.mileage,
+          fuel: car.fuel,
+          location: car.location,
+          image_url: car.imageUrl,
+          overall_risk: aiResult.data.overallRisk || "low",
+          finn_url: url,
+        }, { onConflict: "finn_code" });
+
         if (searchResult?.success) {
-          // Filter out the current listing
-          const currentFinnCode = url.match(/(\d{9,})/)?.[1];
           const filtered = (searchResult.data.listings || []).filter(
-            (l: any) => l.finnCode !== currentFinnCode
+            (l: any) => l.finnCode !== finnCode
           );
           setSimilarListings(filtered);
           setPriceStats(searchResult.data.stats);
