@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CarOverview from "@/components/analysis/CarOverview";
 import RiskAssessment from "@/components/analysis/RiskAssessment";
-import SmartQuestions from "@/components/analysis/SmartQuestions";
+// SmartQuestions removed - questions now integrated into RiskAssessment
 import PriceAnalysis from "@/components/analysis/PriceAnalysis";
 import SpecsGrid from "@/components/analysis/SpecsGrid";
 import EquipmentList from "@/components/analysis/EquipmentList";
@@ -42,8 +42,8 @@ export interface CarData {
 
 export interface AnalysisData {
   summary: string;
-  risks: { level: "high" | "medium" | "low"; title: string; description: string }[];
-  questions: string[];
+  risks: { level: "high" | "medium" | "low"; title: string; category: string; description: string; question: string }[];
+  highlights: string[];
   priceAssessment: string;
   overallRisk: "low" | "medium" | "high";
 }
@@ -197,11 +197,8 @@ const Analysis = () => {
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <CarOverview car={carData} />
         {analysis && <AISummary summary={analysis.summary} />}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {analysis && <RiskAssessment risks={analysis.risks} />}
-          {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} similarListings={similarListings} priceStats={priceStats} isLoadingSimilar={isLoadingSimilar} />}
-        </div>
-        {analysis && <SmartQuestions questions={analysis.questions} />}
+        {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} similarListings={similarListings} priceStats={priceStats} isLoadingSimilar={isLoadingSimilar} />}
+        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
         <SpecsGrid car={carData} />
         {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}
       </main>

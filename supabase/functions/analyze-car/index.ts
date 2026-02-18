@@ -37,18 +37,21 @@ Gi svaret som JSON med følgende struktur:
   "risks": [
     {
       "level": "high|medium|low",
-      "title": "Kort tittel",
-      "description": "Forklaring av risikoen"
+      "title": "Kort tittel på risikoen",
+      "category": "Kategori (f.eks. Motor, Drivverk, Karosseri, Elektronikk, Økonomi, Vedlikehold, Sikkerhet)",
+      "description": "Grundig forklaring av risikoen og hva det betyr for kjøper",
+      "question": "Et konkret spørsmål kjøper bør stille selger om denne risikoen"
     }
   ],
-  "questions": [
-    "Spørsmål du bør stille selger"
+  "highlights": [
+    "Positive ting ved bilen som korte setninger"
   ],
   "priceAssessment": "En vurdering av prisen sammenlignet med markedet",
   "overallRisk": "low|medium|high"
 }
 
-Inkluder 4-6 risikoer (minst 1 høy, 1 middels, 1 lav) og 8-10 relevante spørsmål.
+Inkluder 4-6 risikoer (minst 1 høy, 1 middels, 1 lav) med kategori og spørsmål for hver.
+Inkluder 3-5 positive høydepunkter.
 Svar KUN med JSON, ingen annen tekst.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
