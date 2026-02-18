@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      recent_analyses: {
+        Row: {
+          created_at: string
+          finn_code: string
+          finn_url: string | null
+          fuel: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          mileage: string | null
+          overall_risk: string | null
+          price: string | null
+          title: string
+          year: string | null
+        }
+        Insert: {
+          created_at?: string
+          finn_code: string
+          finn_url?: string | null
+          fuel?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          mileage?: string | null
+          overall_risk?: string | null
+          price?: string | null
+          title: string
+          year?: string | null
+        }
+        Update: {
+          created_at?: string
+          finn_code?: string
+          finn_url?: string | null
+          fuel?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          mileage?: string | null
+          overall_risk?: string | null
+          price?: string | null
+          title?: string
+          year?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
