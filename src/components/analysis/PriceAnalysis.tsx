@@ -32,9 +32,9 @@ const PriceAnalysis = ({ price, assessment, similarListings, priceStats, isLoadi
 
   const getPriceIndicator = () => {
     if (!priceDiffPercent) return null;
-    if (priceDiffPercent < -10) return { icon: TrendingDown, label: "Under markedspris", color: "text-green-500" };
-    if (priceDiffPercent > 10) return { icon: TrendingUp, label: "Over markedspris", color: "text-red-500" };
-    return { icon: Minus, label: "Rundt markedspris", color: "text-yellow-500" };
+    if (priceDiffPercent < -5) return { icon: TrendingDown, label: `${priceDiffPercent}%`, color: "text-green-500" };
+    if (priceDiffPercent > 5) return { icon: TrendingUp, label: `+${priceDiffPercent}%`, color: "text-red-500" };
+    return { icon: Minus, label: `~${Math.abs(priceDiffPercent)}%`, color: "text-yellow-500" };
   };
 
   const indicator = getPriceIndicator();
