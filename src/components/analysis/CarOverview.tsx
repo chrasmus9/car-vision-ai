@@ -37,7 +37,7 @@ const CarOverview = ({ car }: CarOverviewProps) => {
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">{car.seller}</p>
-            <h1 className="text-2xl md:text-3xl text-foreground" style={{ fontFamily: 'var(--font-body)' }}>{car.title}</h1>
+            <h1 className="text-2xl md:text-3xl text-foreground">{car.title}</h1>
           </div>
           <div className="flex gap-2 shrink-0">
             <a

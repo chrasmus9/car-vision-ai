@@ -11,7 +11,7 @@ const SmartQuestions = ({ questions }: SmartQuestionsProps) => {
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <MessageCircleQuestion className="w-4 h-4 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+        <h2 className="text-lg font-semibold text-foreground">
           Spørsmål du bør stille selger
         </h2>
       </div>

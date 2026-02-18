@@ -7,7 +7,7 @@ interface EquipmentListProps {
 const EquipmentList = ({ equipment }: EquipmentListProps) => {
   return (
     <div className="bg-card rounded-2xl border border-border card-shadow p-6 space-y-4">
-      <h2 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+      <h2 className="text-lg font-semibold text-foreground">
         Utstyr ({equipment.length})
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">

@@ -11,7 +11,7 @@ const AISummary = ({ summary }: AISummaryProps) => {
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
-        <h2 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+        <h2 className="text-lg font-semibold text-foreground">
           AI-oppsummering
         </h2>
       </div>
