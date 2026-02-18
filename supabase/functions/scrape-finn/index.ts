@@ -148,10 +148,23 @@ Deno.serve(async (req) => {
         regNr: extractSpec('Registreringsnummer'),
         vin: extractSpec('Chassis'),
         firstReg: extractSpec('1\\. gang'),
-        location: extractSpec('Bilen står i'),
+        location: '',
       },
       jsonLd,
     };
+
+    // Extract location (city) from the "Sted" section near end of page
+    // Text format: "Sted Address, POSTCODE City" or "Sted POSTCODE City"
+    const stedSection = html.match(/Sted\s*<\/[^>]+>[\s\S]{0,500}?(\d{4})\s+([A-ZÆØÅa-zæøå][A-ZÆØÅa-zæøå\s-]+?)(?:\s*<|$)/i);
+    if (stedSection) {
+      carData.specs.location = stedSection[2].trim();
+    } else {
+      // Fallback: look in textContent near end for "Sted ... POSTCODE City"
+      const textSted = textContent.match(/Sted\s+[\s\S]{0,200}?(\d{4})\s+([A-ZÆØÅa-zæøå][A-ZÆØÅa-zæøå\s-]+?)(?:\s+Annonseinformasjon|\s+FINN)/i);
+      if (textSted) {
+        carData.specs.location = textSted[2].trim();
+      }
+    }
 
     // Extract price - try multiple patterns (ordered by specificity)
     const pricePatterns = [
