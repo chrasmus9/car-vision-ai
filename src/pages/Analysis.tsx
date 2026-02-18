@@ -126,8 +126,8 @@ const Analysis = () => {
             body: {
               make: specs.make,
               model: specs.model,
-              yearFrom: parseInt(specs.year) ? parseInt(specs.year) - 2 : undefined,
-              yearTo: parseInt(specs.year) ? parseInt(specs.year) + 2 : undefined,
+              yearFrom: parseInt(specs.year) ? parseInt(specs.year) - 1 : undefined,
+              yearTo: parseInt(specs.year) ? parseInt(specs.year) + 1 : undefined,
               fuel: specs.fuel,
             },
           }),
