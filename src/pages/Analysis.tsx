@@ -222,8 +222,8 @@ const Analysis = () => {
         <CarOverview car={carData} />
         {analysis && <AISummary summary={analysis.summary} />}
         {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} similarListings={similarListings} priceStats={priceStats} isLoadingSimilar={isLoadingSimilar} />}
-        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
         {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
         <SpecsGrid car={carData} />
         {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}
       </main>
