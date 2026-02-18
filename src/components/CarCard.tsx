@@ -43,8 +43,8 @@ const CarCard = ({ image, title, price, year, mileage, fuel, location, timeAgo, 
         <div className="flex items-center gap-2">
           <p className="text-lg font-bold text-foreground">{price}</p>
           {badge && (
-            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
-              <span>~</span>
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
+              <badge.icon className="w-3.5 h-3.5" />
               {badge.label}
             </span>
           )}
