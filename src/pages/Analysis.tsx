@@ -9,6 +9,7 @@ import PriceAnalysis from "@/components/analysis/PriceAnalysis";
 import SpecsGrid from "@/components/analysis/SpecsGrid";
 import EquipmentList from "@/components/analysis/EquipmentList";
 import AISummary from "@/components/analysis/AISummary";
+import RecallsSection from "@/components/analysis/RecallsSection";
 import AnalysisLoading from "@/components/analysis/AnalysisLoading";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +48,7 @@ export interface AnalysisData {
   highlights: string[];
   priceAssessment: string;
   overallRisk: "low" | "medium" | "high";
+  recalls?: { title: string; status: "active" | "expired" | "completed"; date: string; description: string; severity: "high" | "medium" | "low"; advice: string }[];
 }
 
 const Analysis = () => {
@@ -221,6 +223,7 @@ const Analysis = () => {
         {analysis && <AISummary summary={analysis.summary} />}
         {priceNum > 0 && <PriceAnalysis price={priceNum} assessment={analysis?.priceAssessment} similarListings={similarListings} priceStats={priceStats} isLoadingSimilar={isLoadingSimilar} />}
         {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
+        {analysis && <RecallsSection recalls={analysis.recalls || []} />}
         <SpecsGrid car={carData} />
         {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}
       </main>

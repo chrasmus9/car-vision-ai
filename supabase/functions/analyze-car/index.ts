@@ -47,11 +47,22 @@ Gi svaret som JSON med følgende struktur:
     "Positive ting ved bilen som korte setninger"
   ],
   "priceAssessment": "En vurdering av prisen sammenlignet med markedet",
-  "overallRisk": "low|medium|high"
+  "overallRisk": "low|medium|high",
+  "recalls": [
+    {
+      "title": "Kort tittel på tilbakekallingen",
+      "status": "active|expired|completed",
+      "date": "Omtrentlig dato eller årstall",
+      "description": "Hva tilbakekallingen gjelder og hva som ble/må utbedres",
+      "severity": "high|medium|low",
+      "advice": "Konkret råd til kjøper om hva de bør gjøre"
+    }
+  ]
 }
 
 Inkluder 4-6 risikoer (minst 1 høy, 1 middels, 1 lav) med kategori og spørsmål for hver.
 Inkluder 3-5 positive høydepunkter.
+Inkluder kjente tilbakekallinger (recalls) for denne bilmodellen og årsmodellen basert på din kunnskap. Inkluder både aktive og utløpte/fullførte tilbakekallinger. Hvis du ikke kjenner til noen, returner en tom liste.
 Svar KUN med JSON, ingen annen tekst.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
