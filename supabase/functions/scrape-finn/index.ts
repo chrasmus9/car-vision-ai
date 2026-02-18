@@ -81,12 +81,33 @@ Deno.serve(async (req) => {
       .trim()
       .substring(0, 8000);
 
-    // Extract images
-    // Extract images - find all unique item image UUIDs and build high-res URLs
-    const imageIdMatches = [...html.matchAll(/images\.finncdn\.no\/dynamic\/[^"'\s]*\/item\/(\d+)\/([a-f0-9-]+)/g)];
-    const uniqueImageIds = [...new Set(imageIdMatches.map(m => m[2]))];
-    const finnCode = finnUrl.match(/(\d{9,})/)?.[1] || imageIdMatches[0]?.[1] || '';
-    const images = uniqueImageIds.map(id => `https://images.finncdn.no/dynamic/1600w/item/${finnCode}/${id}`).slice(0, 20);
+    // Extract images - handle both /item/CODE/UUID and /YYYY/MM/.../CODE_UUID formats
+    const finnCode = finnUrl.match(/(\d{9,})/)?.[1] || '';
+    
+    // Pattern 1: /item/CODE/UUID (dealer listings)
+    const itemImageMatches = [...html.matchAll(/images\.finncdn\.no\/dynamic\/[^"'\s]*\/item\/\d+\/([a-f0-9-]+)/g)];
+    const itemImageIds = [...new Set(itemImageMatches.map(m => m[1]))];
+    
+    // Pattern 2: /YYYY/MM/.../CODE_UUID.ext (private seller listings)
+    // Extract the path after the resolution prefix, deduplicate by UUID
+    const privateImageMatches = [...html.matchAll(/images\.finncdn\.no\/dynamic\/[^"'\s]*?(\d{4}\/\d{1,2}\/[^"'\s]*?_([a-f0-9-]+)\.[a-z]+)/g)];
+    const seenUuids = new Set<string>();
+    const privateImagePaths: string[] = [];
+    for (const m of privateImageMatches) {
+      const uuid = m[2];
+      if (!seenUuids.has(uuid)) {
+        seenUuids.add(uuid);
+        privateImagePaths.push(m[1]);
+      }
+    }
+    
+    let images: string[] = [];
+    if (itemImageIds.length > 0) {
+      images = itemImageIds.map(id => `https://images.finncdn.no/dynamic/1600w/item/${finnCode}/${id}`);
+    } else if (privateImagePaths.length > 0) {
+      images = privateImagePaths.map(p => `https://images.finncdn.no/dynamic/1600w/${p}`);
+    }
+    images = images.slice(0, 20);
 
     // Extract specs from the page
     const specsSection = html.match(/Spesifikasjoner[\s\S]*?(?=Utstyr|Beskrivelse|$)/i)?.[0] || '';
