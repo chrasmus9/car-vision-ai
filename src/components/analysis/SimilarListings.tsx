@@ -3,10 +3,11 @@ import { ExternalLink, BarChart3, ArrowUpDown, ArrowUp, ArrowDown } from "lucide
 
 interface SimilarListing {
   title: string;
-  subtitle?: string;
   price: number;
   year: string;
   mileage: string;
+  drivetrain: string;
+  gearbox: string;
   finnCode: string;
   url: string;
 }
@@ -17,7 +18,7 @@ interface SimilarListingsProps {
   isLoading?: boolean;
 }
 
-type SortKey = "title" | "subtitle" | "year" | "mileage" | "price" | "diff";
+type SortKey = "title" | "drivetrain" | "gearbox" | "year" | "mileage" | "price" | "diff";
 type SortDir = "asc" | "desc";
 
 const parseMileage = (m: string) => parseInt(m.replace(/\D/g, "")) || 0;
@@ -52,8 +53,8 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
     let cmp = 0;
     switch (sortKey) {
       case "title": cmp = a.title.localeCompare(b.title); break;
-      case "subtitle": cmp = (a.subtitle || '').localeCompare(b.subtitle || ''); break;
-      case "year": cmp = (parseInt(a.year) || 0) - (parseInt(b.year) || 0); break;
+      case "drivetrain": cmp = a.drivetrain.localeCompare(b.drivetrain); break;
+      case "gearbox": cmp = a.gearbox.localeCompare(b.gearbox); break;
       case "year": cmp = (parseInt(a.year) || 0) - (parseInt(b.year) || 0); break;
       case "mileage": cmp = parseMileage(a.mileage) - parseMileage(b.mileage); break;
       case "price": cmp = a.price - b.price; break;
@@ -83,7 +84,8 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
               <tr className="border-b border-border">
                 {([
                   { key: "title" as SortKey, label: "Bil" },
-                  { key: "subtitle" as SortKey, label: "Variant" },
+                  { key: "drivetrain" as SortKey, label: "Hjuldrift" },
+                  { key: "gearbox" as SortKey, label: "Girkasse" },
                   { key: "year" as SortKey, label: "År" },
                   { key: "mileage" as SortKey, label: "Km" },
                   { key: "price" as SortKey, label: "Pris" },
@@ -124,7 +126,8 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                       </a>
                     </td>
                     
-                    <td className="px-4 py-3 text-sm text-foreground/80 max-w-[220px] truncate" title={listing.subtitle || ''}>{listing.subtitle || '–'}</td>
+                    <td className="px-4 py-3 text-sm text-foreground/80">{listing.drivetrain || '–'}</td>
+                    <td className="px-4 py-3 text-sm text-foreground/80">{listing.gearbox || '–'}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.year}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.mileage}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-foreground">
