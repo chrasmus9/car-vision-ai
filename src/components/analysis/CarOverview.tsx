@@ -1,4 +1,4 @@
-import { ExternalLink, MapPin, Calendar, Gauge, Fuel } from "lucide-react";
+import { ExternalLink, MapPin, Calendar, Gauge, Fuel, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CarOverviewProps {
@@ -19,59 +19,70 @@ interface CarOverviewProps {
 
 const CarOverview = ({ car }: CarOverviewProps) => {
   return (
-    <div className="bg-card rounded-2xl border border-border card-shadow overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-        <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
-          <img
-            src={car.imageUrl}
-            alt={car.title}
-            className="w-full h-full object-cover"
-          />
+    <div className="space-y-5">
+      {/* Full-width image */}
+      <div className="relative w-full aspect-[16/9] md:aspect-[2.2/1] rounded-2xl overflow-hidden bg-muted">
+        <img
+          src={car.imageUrl}
+          alt={car.title}
+          className="w-full h-full object-cover"
+        />
+        <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center hover:bg-background/80 transition-colors">
+          <Heart className="w-5 h-5 text-foreground" />
+        </button>
+      </div>
+
+      {/* Details below image */}
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{car.seller}</p>
+            <h1 className="text-2xl md:text-3xl text-foreground">{car.title}</h1>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <a
+              href={`https://www.finn.no/mobility/item/${car.finnCode}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Badge variant="outline" className="gap-1.5 cursor-pointer hover:bg-accent transition-colors px-3 py-1.5">
+                <ExternalLink className="w-3 h-3" />
+                Annonse
+              </Badge>
+            </a>
+          </div>
         </div>
-        <div className="p-6 md:p-8 flex flex-col justify-between space-y-5">
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl text-foreground">{car.title}</h1>
-                <p className="text-sm text-muted-foreground mt-1">{car.subtitle}</p>
-              </div>
-              <a
-                href={`https://www.finn.no/mobility/item/${car.finnCode}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0"
-              >
-                <Badge variant="outline" className="gap-1.5 cursor-pointer hover:bg-accent transition-colors">
-                  <ExternalLink className="w-3 h-3" />
-                  Finn.no
-                </Badge>
-              </a>
-            </div>
-            <p className="text-3xl font-bold text-foreground">{car.price}</p>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>{car.year}</span>
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Gauge className="w-4 h-4 text-primary" />
-              <span>{car.mileage}</span>
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Fuel className="w-4 h-4 text-primary" />
-              <span>{car.fuel} · {car.gearbox}</span>
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span>{car.location}</span>
-            </div>
-          </div>
+        {/* Price */}
+        <div>
+          <p className="text-xs text-muted-foreground">Totalpris</p>
+          <p className="text-3xl font-bold text-foreground">{car.price}</p>
+        </div>
 
-          <div className="pt-3 border-t border-border text-sm text-muted-foreground">
-            Selger: <span className="font-medium text-foreground">{car.seller}</span>
+        {/* Quick specs row */}
+        <div className="flex flex-wrap gap-x-8 gap-y-2 pt-2 border-t border-border">
+          <div>
+            <p className="text-xs text-muted-foreground">Modellår</p>
+            <p className="text-sm font-semibold text-foreground">{car.year}</p>
           </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Kilometerstand</p>
+            <p className="text-sm font-semibold text-foreground">{car.mileage}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Drivstoff</p>
+            <p className="text-sm font-semibold text-foreground">{car.fuel}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Girkasse</p>
+            <p className="text-sm font-semibold text-foreground">{car.gearbox}</p>
+          </div>
+          {car.location && (
+            <div>
+              <p className="text-xs text-muted-foreground">Sted</p>
+              <p className="text-sm font-semibold text-foreground">{car.location}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
