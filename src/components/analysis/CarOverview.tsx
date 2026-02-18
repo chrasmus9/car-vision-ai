@@ -76,9 +76,6 @@ const CarOverview = ({ car }: CarOverviewProps) => {
             {car.subtitle && (
               <p className="text-sm text-muted-foreground">{car.subtitle}</p>
             )}
-            {car.seller && car.seller !== "Privat" && (
-              <p className="text-xs text-muted-foreground mt-1">{car.seller}</p>
-            )}
           </div>
           <div className="flex gap-2 shrink-0">
             <a
