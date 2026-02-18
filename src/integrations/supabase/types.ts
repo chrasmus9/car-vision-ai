@@ -26,6 +26,7 @@ export type Database = {
           mileage: string | null
           overall_risk: string | null
           price: string | null
+          price_diff_percent: number | null
           title: string
           year: string | null
         }
@@ -40,6 +41,7 @@ export type Database = {
           mileage?: string | null
           overall_risk?: string | null
           price?: string | null
+          price_diff_percent?: number | null
           title: string
           year?: string | null
         }
@@ -54,6 +56,7 @@ export type Database = {
           mileage?: string | null
           overall_risk?: string | null
           price?: string | null
+          price_diff_percent?: number | null
           title?: string
           year?: string | null
         }
