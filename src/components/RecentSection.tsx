@@ -15,6 +15,7 @@ interface RecentCar {
   location: string;
   image_url: string;
   overall_risk: string;
+  price_diff_percent: number | null;
   finn_url: string;
   created_at: string;
 }
@@ -65,7 +66,7 @@ const RecentSection = () => {
                 fuel={car.fuel}
                 location={car.location}
                 timeAgo={timeAgo(car.created_at)}
-                riskLevel={(car.overall_risk as "low" | "medium" | "high") || "low"}
+                priceDiffPercent={car.price_diff_percent}
               />
             </Link>
           ))}

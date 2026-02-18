@@ -142,6 +142,12 @@ const Analysis = () => {
 
         // Save to recent analyses
         const finnCode = url.match(/(\d{9,})/)?.[1] || "";
+        const priceNum = parseInt(car.price.replace(/\D/g, "")) || 0;
+        let priceDiffPercent: number | null = null;
+        if (searchResult?.success && searchResult.data.stats?.avg && priceNum > 0) {
+          priceDiffPercent = Math.round(((priceNum - searchResult.data.stats.avg) / searchResult.data.stats.avg) * 100);
+        }
+
         await supabase.from("recent_analyses").upsert({
           finn_code: finnCode,
           title: car.title,
@@ -153,7 +159,8 @@ const Analysis = () => {
           image_url: car.imageUrl,
           overall_risk: aiResult.data.overallRisk || "low",
           finn_url: url,
-        }, { onConflict: "finn_code" });
+          price_diff_percent: priceDiffPercent,
+        } as any, { onConflict: "finn_code" });
 
         if (searchResult?.success) {
           const filtered = (searchResult.data.listings || []).filter(
