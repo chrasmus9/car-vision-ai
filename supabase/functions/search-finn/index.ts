@@ -18,36 +18,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build Finn.no search URL
+    // Use Finn.no JSON API for structured data
     const params = new URLSearchParams();
-    params.set('search_type', 'SEARCH_ID_CAR_USED');
+    params.set('searchkey', 'SEARCH_ID_CAR_USED');
     params.set('sort', 'PUBLISHED_DESC');
-    
-    const query = `${make} ${model}`.trim();
-    params.set('q', query);
-    
+    params.set('q', `${make} ${model}`.trim());
+    params.set('vertical', 'car');
+    params.set('sub_vertical', 'used');
+
     if (yearFrom) params.set('year_from', String(yearFrom));
     if (yearTo) params.set('year_to', String(yearTo));
-    if (fuel) {
-      const fuelMap: Record<string, string> = {
-        'Diesel': '2',
-        'Bensin': '1',
-        'Elektrisk': '4',
-        'El': '4',
-        'Hybrid': '3',
-        'Plugg-inn hybrid': '7',
-      };
-      if (fuelMap[fuel]) params.set('fuel', fuelMap[fuel]);
-    }
 
-    const searchUrl = `https://www.finn.no/mobility/search/car?${params.toString()}`;
-    console.log('Searching Finn.no:', searchUrl);
+    const searchUrl = `https://www.finn.no/api/search-qf?${params.toString()}`;
+    console.log('Searching Finn.no API:', searchUrl);
 
     const response = await fetch(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'nb-NO,nb;q=0.9,no;q=0.8',
+        'Accept': 'application/json',
       },
     });
 
@@ -58,97 +46,40 @@ Deno.serve(async (req) => {
       );
     }
 
-    const html = await response.text();
+    const data = await response.json();
+    const docs = data.docs || [];
 
-    const listings: { title: string; subtitle: string; price: number; year: string; mileage: string; finnCode: string; url: string; location: string }[] = [];
-
-    // Strategy: Find each listing link (/mobility/item/CODE), then scan forward
-    // in the HTML to find the price that belongs to that specific listing block.
-    // Finn.no structures results as blocks where the link and price are close together.
-    
-    // Find all item links with their positions
-    const linkPattern = /href="https:\/\/www\.finn\.no\/mobility\/item\/(\d+)"/g;
-    const linkMatches: { code: string; index: number }[] = [];
-    let linkMatch;
-    while ((linkMatch = linkPattern.exec(html)) !== null) {
-      const code = linkMatch[1];
-      // Skip duplicates (same code can appear multiple times)
-      if (!linkMatches.find(m => m.code === code)) {
-        linkMatches.push({ code, index: linkMatch.index });
-      }
-    }
-
-    // For each link, extract the surrounding block and find price within it
-    for (const item of linkMatches) {
-      if (listings.length >= 15) break;
-
-      // Take a larger chunk around the link to capture subtitle/specs
-      const blockStart = Math.max(0, item.index - 1000);
-      const blockEnd = Math.min(html.length, item.index + 3000);
-      const block = html.substring(blockStart, blockEnd);
-
-      // Extract title from the heading near this link
-      const titleMatch = block.match(new RegExp(`item/${item.code}"[^>]*>([^<]+)`)) ||
-                         block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
-      const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '').trim() : `${make} ${model}`;
-
-      // Find price - look for "X kr" pattern in the block AFTER the link
-      const afterLink = html.substring(item.index, item.index + 2000);
-      const priceMatch = afterLink.match(/([\d\s]{3,})\s*kr/);
-      const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0;
-
-      // Derive variant/subtitle by stripping make+model from the title
-      const makeModel = `${make} ${model}`.toLowerCase();
-      const titleLower = title.toLowerCase();
-      const subtitle = titleLower.startsWith(makeModel)
-        ? title.substring(makeModel.length).trim()
-        : '';
-
-      // Extract year and mileage from specs line (e.g. "2022 ∙ 75 000 km ∙ El")
-      const specsMatch = afterLink.match(/(20\d{2})\s*[∙·]\s*([\d\s]+)\s*km/);
-      const year = specsMatch ? specsMatch[1] : '';
-      const mileage = specsMatch ? specsMatch[2].trim() + ' km' : '';
-
-      // Extract location
-      const locationMatch = afterLink.match(/([A-ZÆØÅ][a-zæøåA-ZÆØÅ\s]+)\s*[∙·]\s*(?:Sulland|Bertel|VALO|Rebil|Car4|Bayern|Møller|Bilhuset|Birger|Motor|Auto|Forhandler|Merkeforhandler)/);
-      const location = locationMatch ? locationMatch[1].trim() : '';
-
-      // Filter: only include listings that match the model name
-      // Use a tighter window around the link to avoid matching neighbor listings
-      const modelLower = model.toLowerCase();
-      const tightBlock = html.substring(item.index, Math.min(html.length, item.index + 1500)).toLowerCase();
-      const noSpaceModel = model.replace(/\s+/g, '').toLowerCase();
-      const matchesModel = tightBlock.includes(modelLower) || tightBlock.includes(noSpaceModel);
-
-      if (price > 10000 && price < 10000000 && matchesModel) {
-        listings.push({
-          title,
-          subtitle,
-          price,
-          year,
-          mileage,
-          finnCode: item.code,
-          url: `https://www.finn.no/mobility/item/${item.code}`,
-          location,
-        });
-      }
-    }
+    const modelLower = model.toLowerCase();
+    const listings = docs
+      .filter((doc: any) => {
+        const docModel = (doc.model || '').toLowerCase();
+        return docModel === modelLower && doc.price?.amount > 10000;
+      })
+      .slice(0, 15)
+      .map((doc: any) => ({
+        title: doc.heading || `${make} ${model}`,
+        subtitle: (doc.model_specification || '').replace(/&amp;/g, '&'),
+        price: doc.price?.amount || 0,
+        year: String(doc.year || ''),
+        mileage: doc.mileage ? `${doc.mileage.toLocaleString('nb-NO')} km` : '',
+        finnCode: String(doc.id || doc.ad_id || ''),
+        url: doc.canonical_url || `https://www.finn.no/mobility/item/${doc.id}`,
+        location: doc.location || '',
+      }));
 
     console.log(`Found ${listings.length} similar listings`);
-    
-    // Log first few for debugging
     for (const l of listings.slice(0, 3)) {
-      console.log(`  ${l.finnCode}: ${l.title} - ${l.price} kr`);
+      console.log(`  ${l.finnCode}: ${l.title} (${l.subtitle}) - ${l.price} kr`);
     }
 
     // Calculate stats
-    const prices = listings.map(l => l.price).filter(p => p > 0);
+    const prices = listings.map((l: any) => l.price).filter((p: number) => p > 0);
     const stats = prices.length > 0 ? {
       count: prices.length,
       min: Math.min(...prices),
       max: Math.max(...prices),
-      avg: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
-      median: prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)],
+      avg: Math.round(prices.reduce((a: number, b: number) => a + b, 0) / prices.length),
+      median: prices.sort((a: number, b: number) => a - b)[Math.floor(prices.length / 2)],
     } : null;
 
     return new Response(
