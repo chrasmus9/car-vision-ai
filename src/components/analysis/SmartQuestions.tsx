@@ -1,19 +1,10 @@
 import { MessageCircleQuestion } from "lucide-react";
 
-const questions = [
-  "Kan du fremvise komplett service-historikk med kvitteringer?",
-  "Har diesel-partikkelfilteret blitt rengjort eller byttet noen gang?",
-  "Er det noen kjente feil eller mangler som ikke er nevnt i annonsen?",
-  "Hva er grunnen til salget?",
-  "Har bilen vært involvert i noen kollisjoner eller skader?",
-  "Kan jeg ta med bilen til en uavhengig verksted for sjekk før kjøp?",
-  "Hva dekker bruktbilgarantien, og hva koster den?",
-  "Når ble registerreimen/kjeden sist byttet?",
-  "Er det noe rust på bilen, spesielt under og på hjulbuer?",
-  "Kan du bekrefte at kilometerstand er korrekt og ikke manipulert?",
-];
+interface SmartQuestionsProps {
+  questions: string[];
+}
 
-const SmartQuestions = () => {
+const SmartQuestions = ({ questions }: SmartQuestionsProps) => {
   return (
     <div className="bg-card rounded-2xl border border-border card-shadow p-6 space-y-4">
       <div className="flex items-center gap-2">
