@@ -92,15 +92,15 @@ Deno.serve(async (req) => {
                          block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
       const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '').trim() : `${make} ${model}`;
 
-      // Extract subtitle/generation – usually in a smaller element after the title
-      const subtitleMatch = afterLink.match(/<(?:span|p|div)[^>]*class="[^"]*subtitle[^"]*"[^>]*>([^<]+)/i) ||
-                            afterLink.match(/<h2[^>]*>[^<]*<\/h2>\s*(?:<[^>]*>)*\s*<(?:span|p|div)[^>]*>([^<]+)/i);
-      const subtitle = subtitleMatch ? subtitleMatch[1].trim() : '';
-
       // Find price - look for "X kr" pattern in the block AFTER the link
       const afterLink = html.substring(item.index, item.index + 2000);
       const priceMatch = afterLink.match(/([\d\s]{3,})\s*kr/);
       const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0;
+
+      // Extract subtitle/generation – usually in a smaller element after the title
+      const subtitleMatch = afterLink.match(/<(?:span|p|div)[^>]*class="[^"]*subtitle[^"]*"[^>]*>([^<]+)/i) ||
+                            afterLink.match(/<h2[^>]*>[^<]*<\/h2>\s*(?:<[^>]*>)*\s*<(?:span|p|div)[^>]*>([^<]+)/i);
+      const subtitle = subtitleMatch ? subtitleMatch[1].trim() : '';
 
       // Extract year and mileage from specs line (e.g. "2022 ∙ 75 000 km ∙ El")
       const specsMatch = afterLink.match(/(20\d{2})\s*[∙·]\s*([\d\s]+)\s*km/);
