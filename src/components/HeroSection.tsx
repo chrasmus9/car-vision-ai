@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [url, setUrl] = useState("");
   const { toast } = useToast();
 
@@ -28,6 +30,7 @@ const HeroSection = () => {
       title: "Analyse starter...",
       description: "Vi analyserer bilannonsen din nå.",
     });
+    navigate(`/analyse?url=${encodeURIComponent(url)}`);
   };
 
   return (
