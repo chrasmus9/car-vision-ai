@@ -190,6 +190,31 @@ const Analysis = () => {
           );
           setSimilarListings(filtered);
           setPriceStats(searchResult.data.stats);
+
+          // Enrich similar listings with Vegvesen data (variant + drivetrain)
+          if (filtered.length > 0) {
+            supabase.functions.invoke("enrich-listings", {
+              body: {
+                listings: filtered.map((l: any) => ({ finnCode: l.finnCode, url: l.url })),
+              },
+            }).then(({ data: enrichResult }) => {
+              if (enrichResult?.success && enrichResult.data) {
+                setSimilarListings(prev =>
+                  prev.map(l => {
+                    const enriched = enrichResult.data[l.finnCode];
+                    if (enriched) {
+                      return {
+                        ...l,
+                        variant: enriched.variant || l.variant,
+                        drivetrain: enriched.drivetrain || l.drivetrain,
+                      };
+                    }
+                    return l;
+                  })
+                );
+              }
+            }).catch(e => console.warn("Enrichment failed:", e));
+          }
         }
       } catch (err: any) {
         console.error("Analysis error:", err);
