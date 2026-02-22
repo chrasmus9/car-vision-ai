@@ -19,6 +19,9 @@ interface CarOverviewProps {
     finnCode: string;
     imageUrl: string;
     images: string[];
+    maxTowingWeight?: string | null;
+    topSpeed?: string | null;
+    horsepower?: string | null;
   };
 }
 
@@ -137,10 +140,28 @@ const CarOverview = ({ car }: CarOverviewProps) => {
             <p className="text-xs text-muted-foreground">Girkasse</p>
             <p className="text-sm font-semibold text-foreground">{car.gearbox}</p>
           </div>
-          {car.location && (
+        {car.location && (
             <div>
               <p className="text-xs text-muted-foreground">Sted</p>
               <p className="text-sm font-semibold text-foreground">{car.location}</p>
+            </div>
+          )}
+          {car.maxTowingWeight && (
+            <div>
+              <p className="text-xs text-muted-foreground">Maks tilhengervekt</p>
+              <p className="text-sm font-semibold text-foreground">{car.maxTowingWeight}</p>
+            </div>
+          )}
+          {car.topSpeed && (
+            <div>
+              <p className="text-xs text-muted-foreground">Maks hastighet</p>
+              <p className="text-sm font-semibold text-foreground">{car.topSpeed}</p>
+            </div>
+          )}
+          {car.horsepower && (
+            <div>
+              <p className="text-xs text-muted-foreground">Hestekrefter</p>
+              <p className="text-sm font-semibold text-foreground">{car.horsepower}</p>
             </div>
           )}
         </div>
