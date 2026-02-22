@@ -253,17 +253,27 @@ Deno.serve(async (req) => {
     }
 
     // Extract Rekkevidde (WLTP) for electric cars
-    const rekkeviddSpec = extractSpec('Rekkevidde');
-    if (rekkeviddSpec) {
-      const extractWLTP = (rawText: string | null | undefined): number | null => {
-        if (!rawText || typeof rawText !== 'string') return null;
-        const allMatches = [...rawText.matchAll(/(\d+)\s*km/gi)];
-        if (allMatches.length === 0) return null;
-        const lastMatch = allMatches[allMatches.length - 1];
-        return parseInt(lastMatch[1], 10);
-      };
-      const wltpKm = extractWLTP(rekkeviddSpec);
-      (carData as any).rekkevidde = wltpKm ? `${wltpKm} km` : rekkeviddSpec;
+    // extractSpec only gets first text node — we need the full section including "400 km" in a separate element
+    const extractWLTP = (rawText: string | null | undefined): number | null => {
+      if (!rawText || typeof rawText !== 'string') return null;
+      const allMatches = [...rawText.matchAll(/(\d+)\s*km/gi)];
+      if (allMatches.length === 0) return null;
+      const lastMatch = allMatches[allMatches.length - 1];
+      return parseInt(lastMatch[1], 10);
+    };
+    // Grab a broad HTML section after "Rekkevidde" to capture both disclaimer and the km value
+    const rekkeviddSection = html.match(/Rekkevidde[\s\S]{0,800}?(?=<\/(?:section|dl|table)|Girkasse|Kilometerstand|Batterikapasitet|Maksimal\s+tilhenger)/i)?.[0] || '';
+    const rekkeviddText = rekkeviddSection.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+    const wltpKm = extractWLTP(rekkeviddText);
+    if (wltpKm) {
+      (carData as any).rekkevidde = `${wltpKm} km`;
+    } else {
+      // Fallback: try textContent
+      const textWltp = textContent.match(/Rekkevidde[\s\S]{0,500}/i)?.[0] || '';
+      const fallbackKm = extractWLTP(textWltp);
+      if (fallbackKm) {
+        (carData as any).rekkevidde = `${fallbackKm} km`;
+      }
     }
 
     // Extract Batterikapasitet from Finn structured spec
