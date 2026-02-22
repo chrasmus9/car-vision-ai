@@ -31,13 +31,22 @@ async function scrapeRegNr(finnUrl: string): Promise<string | null> {
 function deriveDrivetrain(raw: any): string {
   try {
     const tekn = raw?.kjoretoydataListe?.[0]?.godkjenning?.tekniskGodkjenning?.tekniskeData;
-    const akslinger = tekn?.akslpiingerOgDekk?.akspilingGruppe || tekn?.akslpiingerOgDekk?.akspilingGrupper || [];
-
-    // Try proper aksling structure
-    if (Array.isArray(akslinger) && akslinger.length > 0) {
-      const drivAxles = akslinger.filter((a: any) => a?.drivAksel === true || a?.plasseringAksling?.drivAksel === true);
-      if (drivAxles.length >= 2) return 'Firehjulsdrift';
-      if (drivAxles.length === 1) return 'Tohjulsdrift';
+    
+    // Correct Vegvesen path: tekn.akslinger.akselGruppe[].akselListe.aksel[].drivAksel
+    const akselGrupper = tekn?.akslinger?.akselGruppe || [];
+    if (Array.isArray(akselGrupper) && akselGrupper.length > 0) {
+      let drivAxleGroupCount = 0;
+      for (const gruppe of akselGrupper) {
+        const aksler = gruppe?.akselListe?.aksel || [];
+        for (const aksel of aksler) {
+          if (aksel?.drivAksel === true) {
+            drivAxleGroupCount++;
+            break; // one drive axle per group is enough
+          }
+        }
+      }
+      if (drivAxleGroupCount >= 2) return 'Firehjulsdrift';
+      if (drivAxleGroupCount === 1) return 'Tohjulsdrift';
     }
 
     // Try motor/drivetrain field
@@ -47,7 +56,7 @@ function deriveDrivetrain(raw: any): string {
     if (/to|2|bakhjul|forhjul|rear|front/i.test(driveCode)) return 'Tohjulsdrift';
 
     // Fallback: check handelsbetegnelse for AWD/4WD/xDrive etc
-    const generelt = tekn?.generpieltOmKjoretoy || tekn?.generelt;
+    const generelt = tekn?.generelt;
     const betegnelse = generelt?.handelsbetegnelse?.[0] || '';
     if (/xdrive|awd|4wd|quattro|4motion|4matic|allgrip|symmetrical/i.test(betegnelse)) {
       return 'Firehjulsdrift';
@@ -74,7 +83,7 @@ async function lookupVegvesen(regNr: string, apiKey: string): Promise<{ variant:
 
     const raw = await response.json();
     const tekn = raw?.kjoretoydataListe?.[0]?.godkjenning?.tekniskGodkjenning?.tekniskeData;
-    const generelt = tekn?.generpieltOmKjoretoy || tekn?.generelt;
+    const generelt = tekn?.generelt;
 
     const variant = generelt?.handelsbetegnelse?.[0] || '';
     const drivetrain = deriveDrivetrain(raw);
