@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
       {
         headers: {
           'Accept': 'application/json',
+          'User-Agent': 'BilsjekkApp/1.0',
         },
       }
     );
@@ -42,8 +43,8 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       console.error('Brønnøysund API error:', response.status);
       return new Response(
-        JSON.stringify({ success: false, error: `API request failed: ${response.status}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: `API request failed: ${response.status}`, unavailable: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
