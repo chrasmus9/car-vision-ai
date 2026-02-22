@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { carData } = await req.json();
+    const { carData, vegvesenData } = await req.json();
 
     if (!carData) {
       return new Response(
@@ -26,11 +26,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    const vegvesenSection = vegvesenData ? `
+
+Offisielle data fra Statens vegvesen (Vegvesen API):
+${JSON.stringify(vegvesenData, null, 2)}
+
+VIKTIG: Sammenlign Finn-annonsen med de offisielle Vegvesen-dataene. Hvis du finner avvik (f.eks. ulik modellår, hestekrefter, drivstofftype, førstegangsregistrering, motorstørrelse), SKAL du inkludere disse som risikoer med level "high" og category "Avvik".
+` : '';
+
     const prompt = `Du er en ekspert bilanalytiker. Analyser følgende bilannonse fra Finn.no og gi en grundig analyse på norsk.
 
-Bildata:
+Bildata fra Finn.no-annonsen:
 ${JSON.stringify(carData, null, 2)}
-
+${vegvesenSection}
 Gi svaret som JSON med følgende struktur:
 {
   "summary": "En kort oppsummering (3-5 setninger) av bilen med de viktigste funnene",
@@ -38,7 +46,7 @@ Gi svaret som JSON med følgende struktur:
     {
       "level": "high|medium|low",
       "title": "Kort tittel på risikoen",
-      "category": "Kategori (f.eks. Motor, Drivverk, Karosseri, Elektronikk, Økonomi, Vedlikehold, Sikkerhet)",
+      "category": "Kategori (f.eks. Motor, Drivverk, Karosseri, Elektronikk, Økonomi, Vedlikehold, Sikkerhet, Avvik)",
       "description": "Grundig forklaring av risikoen og hva det betyr for kjøper",
       "question": "Et konkret spørsmål kjøper bør stille selger om denne risikoen"
     }
@@ -61,6 +69,7 @@ Gi svaret som JSON med følgende struktur:
 }
 
 Inkluder 4-6 risikoer (minst 1 høy, 1 middels, 1 lav) med kategori og spørsmål for hver.
+${vegvesenData ? 'Inkluder ALLE avvik mellom Finn-data og Vegvesen-data som separate risikoer med category "Avvik".' : ''}
 Inkluder 3-5 positive høydepunkter.
 Inkluder kjente tilbakekallinger (recalls) for denne bilmodellen og årsmodellen basert på din kunnskap. Inkluder både aktive og utløpte/fullførte tilbakekallinger. Hvis du ikke kjenner til noen, returner en tom liste.
 Svar KUN med JSON, ingen annen tekst.`;
