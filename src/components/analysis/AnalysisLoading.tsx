@@ -85,42 +85,50 @@ const AnalysisLoading = ({ loadingStep = "scraping", fromCache = false }: Analys
   if (fromCache || !visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center min-h-screen px-4">
       {/* Brand logo */}
-      <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-6">
-        <Car className="w-7 h-7 text-primary-foreground" />
+      <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-8">
+        <Car className="w-9 h-9 text-primary-foreground" />
       </div>
 
       {/* Title */}
-      <h1 className="text-2xl font-bold text-foreground mb-8" style={{ fontFamily: 'var(--font-heading)' }}>
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-10" style={{ fontFamily: 'var(--font-heading)' }}>
         Analyserer bilen...
       </h1>
 
       {/* Progress bar */}
-      <div className="w-full max-w-[400px] mb-2">
-        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+      <div className="w-full max-w-md mb-3">
+        <div
+          className="w-full h-3 rounded-full overflow-hidden"
+          style={{
+            backgroundColor: "hsl(var(--muted))",
+            boxShadow: "0 0 8px 1px hsl(var(--primary) / 0.15)",
+          }}
+        >
           <div
-            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+            className="h-full rounded-full transition-all duration-500 ease-out animate-pulse-glow"
             style={{
               width: `${progress}%`,
-              boxShadow: "0 0 8px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.2)",
+              backgroundColor: "hsl(var(--primary))",
+              boxShadow:
+                "0 0 12px 3px hsl(var(--primary) / 0.6), 0 0 24px 6px hsl(var(--primary) / 0.3)",
             }}
           />
         </div>
         {/* Percentage */}
-        <p className="text-xs text-primary text-right mt-1 tabular-nums">
+        <p className="text-sm text-primary text-right mt-1.5 tabular-nums font-semibold">
           {Math.round(progress)}%
         </p>
       </div>
 
       {/* Status text */}
-      <p className="text-sm text-muted-foreground text-center mb-6">
+      <p className="text-base text-muted-foreground text-center mb-8">
         {getStatusText(progress)}
       </p>
 
       {/* Fun fact */}
       <p
-        className={`text-xs text-muted-foreground/60 italic text-center max-w-sm transition-opacity duration-300 ${
+        className={`text-sm text-muted-foreground/60 italic text-center max-w-sm transition-opacity duration-300 ${
           fade ? "opacity-100" : "opacity-0"
         }`}
       >
