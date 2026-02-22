@@ -101,6 +101,14 @@ const Analysis = () => {
               setPriceStats(cached.price_stats);
               setLoading(false);
               window.scrollTo({ top: 0, behavior: "smooth" });
+
+              // Ensure user_id is set on cached entry for logged-in user
+              if (user?.id && !cached.user_id) {
+                supabase.from("analysis_cache")
+                  .update({ user_id: user.id } as any)
+                  .eq("finn_code", finnCode)
+                  .then(() => {});
+              }
               return;
             }
           }

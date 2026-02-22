@@ -46,13 +46,15 @@ const CarOverview = ({ car }: CarOverviewProps) => {
       return;
     }
     if (!car.finnCode || favLoading) return;
+    const wasFavorite = isFavorite;
+    setIsFavorite(!wasFavorite);
     setFavLoading(true);
     try {
-      if (isFavorite) {
-        await supabase.from("favorites").delete().eq("user_id", user.id).eq("finn_code", car.finnCode);
-        setIsFavorite(false);
+      if (wasFavorite) {
+        const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("finn_code", car.finnCode);
+        if (error) throw error;
       } else {
-        await supabase.from("favorites").insert({
+        const { error } = await supabase.from("favorites").insert({
           user_id: user.id,
           finn_code: car.finnCode,
           finn_url: `https://www.finn.no/mobility/item/${car.finnCode}`,
@@ -66,8 +68,10 @@ const CarOverview = ({ car }: CarOverviewProps) => {
             imageUrl: car.imageUrl,
           },
         });
-        setIsFavorite(true);
+        if (error) throw error;
       }
+    } catch {
+      setIsFavorite(wasFavorite);
     } finally {
       setFavLoading(false);
     }
