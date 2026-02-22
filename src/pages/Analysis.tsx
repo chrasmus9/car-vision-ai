@@ -70,6 +70,8 @@ const Analysis = () => {
   const [priceStats, setPriceStats] = useState<any>(null);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const [vegvesenData, setVegvesenData] = useState<any>(null);
+  const [nhtsaRecalls, setNhtsaRecalls] = useState<any[]>([]);
+  const [nhtsaCode, setNhtsaCode] = useState<string>("");
 
   useEffect(() => {
     if (!url) {
@@ -159,12 +161,12 @@ const Analysis = () => {
 
         setCarData(car);
 
-        // Step 2: Vegvesen lookup
+        // Step 2: Vegvesen lookup (VIN first, fallback to regNr)
         let vegvesen = null;
-        if (car.regNr) {
+        if (car.vin || car.regNr) {
           try {
             const { data: vResult } = await supabase.functions.invoke("vegvesen-lookup", {
-              body: { regNr: car.regNr },
+              body: { vin: car.vin || undefined, regNr: car.regNr || undefined },
             });
             if (vResult?.success) {
               vegvesen = vResult.data;
@@ -178,7 +180,13 @@ const Analysis = () => {
         // Step 3: AI Analysis + Search similar in parallel
         setLoadingStep("analyzing");
         
-        const [aiResponse, searchResponse] = await Promise.all([
+        // Determine make/model for NHTSA
+        const nhtsaMake = vegvesen?.make || specs.make || "";
+        const nhtsaModel = vegvesen?.model || specs.model || "";
+        const nhtsaYear = parseInt(specs.year) || car.year;
+        const carIsElectric = car.fuel?.toLowerCase()?.includes('elektr') || car.fuel?.toLowerCase()?.includes('el') || false;
+
+        const [aiResponse, searchResponse, nhtsaResponse] = await Promise.all([
           supabase.functions.invoke("analyze-car", {
             body: { carData: { ...car, textContent: raw.textContent }, vegvesenData: vegvesen },
           }),
@@ -191,10 +199,24 @@ const Analysis = () => {
               fuel: specs.fuel,
             },
           }),
+          (nhtsaMake && nhtsaModel && nhtsaYear)
+            ? supabase.functions.invoke("nhtsa-recalls", {
+                body: { make: nhtsaMake, model: nhtsaModel, year: nhtsaYear, isElectric: carIsElectric },
+              })
+            : Promise.resolve({ data: null }),
         ]);
 
         const { data: aiResult, error: aiError } = aiResponse;
         const { data: searchResult } = searchResponse;
+        const { data: nhtsaResult } = nhtsaResponse || {};
+
+        // Process NHTSA recalls
+        if (nhtsaResult?.success && nhtsaResult.recalls?.length > 0) {
+          setNhtsaRecalls(nhtsaResult.recalls);
+          setNhtsaCode(nhtsaResult.nhtsaCode || "");
+        } else if (nhtsaResult) {
+          setNhtsaCode(nhtsaResult.nhtsaCode || "NHTSA-002");
+        }
 
         if (aiError || !aiResult?.success) {
           throw new Error(aiResult?.error || aiError?.message || "AI-analyse feilet");
@@ -355,13 +377,21 @@ const Analysis = () => {
           firstRegNorwayDate={vegvesenData?.firstRegistration}
           modelYear={carData.year}
           regNr={carData.regNr}
+          svvCode={vegvesenData?.svvCode}
         />
 
         {/* Høydepunkter + Risikoer */}
         {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} highlightsFirst />}
 
         {/* Tilbakekallinger */}
-        {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+        {analysis && (
+          <RecallsSection
+            recalls={analysis.recalls || []}
+            nhtsaRecalls={nhtsaRecalls}
+            nhtsaCode={nhtsaCode}
+            svvCode={vegvesenData?.svvCode}
+          />
+        )}
 
         <SimilarListings
           listings={similarListings}
