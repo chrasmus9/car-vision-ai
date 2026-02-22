@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ExternalLink, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
+import { ExternalLink, BarChart3, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface SimilarListing {
   title: string;
@@ -29,7 +28,7 @@ const parseMileage = (m: string) => parseInt(m.replace(/\D/g, "")) || 0;
 const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsProps) => {
   const [sortKey, setSortKey] = useState<SortKey>("price");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const navigate = useNavigate();
+  
 
   if (isLoading) {
     return (
@@ -159,15 +158,6 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                       >
                         <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                       </a>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => navigate(`/analyse?url=${encodeURIComponent(listing.url)}`)}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
-                      >
-                        Analyser
-                        <ArrowRight className="w-3 h-3" />
-                      </button>
                     </td>
                   </tr>
                 );
