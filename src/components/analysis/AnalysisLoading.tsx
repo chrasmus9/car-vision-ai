@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface AnalysisLoadingProps {
   step: "scraping" | "analyzing";
@@ -29,10 +29,32 @@ const SkeletonBadges = () => (
   </div>
 );
 
+const tips = [
+  "Visste du at 1 av 3 bruktbiler har skjulte heftelser?",
+  "Vi sjekker kilometerstand, eierhistorikk og kjente feil",
+  "En grundig sjekk kan spare deg for tusenvis av kroner",
+  "BilSjekk analyserer både tekniske og kommersielle risikoer",
+];
+
 const AnalysisLoading = ({ step, carData }: AnalysisLoadingProps) => {
   const stepText = step === "scraping"
     ? "Henter annonsedata..."
     : "Analyserer bilen...";
+
+  const [tipIndex, setTipIndex] = useState(0);
+  const [tipVisible, setTipVisible] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipVisible(false);
+      setTimeout(() => {
+        setTipIndex((i) => (i + 1) % tips.length);
+        setTipVisible(true);
+      }, 400);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -45,22 +67,29 @@ const AnalysisLoading = ({ step, carData }: AnalysisLoadingProps) => {
               <img
                 src={carData.imageUrl}
                 alt={carData.title}
-                className="w-full h-full object-cover"
+                onLoad={() => setImageLoaded(true)}
+                className={`w-full h-full object-cover transition-opacity duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
               />
             ) : (
               <div className="w-full h-full bg-muted" />
             )}
             {/* Loading overlay on image */}
-            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
-              <div className="bg-card border border-border rounded-full px-5 py-2.5 flex items-center gap-2.5 card-shadow">
-                <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                <span className="text-sm font-medium text-foreground">{stepText}</span>
+            <div className="absolute inset-0 bg-background/60 flex flex-col items-center justify-center gap-4 px-6">
+              <span className="text-sm font-medium text-foreground">{stepText}</span>
+              {/* Indeterminate loading bar */}
+              <div className="w-full max-w-xs h-1.5 rounded-full bg-muted-foreground/15 overflow-hidden">
+                <div className="h-full w-1/3 rounded-full bg-primary animate-[indeterminate_1.5s_ease-in-out_infinite]" />
               </div>
-              <p className="text-xs text-muted-foreground">Analysen tar ca. 30 sekunder</p>
+              {/* Rotating tip */}
+              <p
+                className={`text-xs text-muted-foreground text-center max-w-[280px] transition-opacity duration-400 ${tipVisible ? "opacity-100" : "opacity-0"}`}
+              >
+                {tips[tipIndex]}
+              </p>
             </div>
           </div>
 
-          {/* Details area */}
+          {/* Details area — always show skeletons for unfilled fields */}
           <div className="p-6 md:p-8 flex flex-col justify-between space-y-5">
             <div className="space-y-3">
               {carData ? (
@@ -101,6 +130,14 @@ const AnalysisLoading = ({ step, carData }: AnalysisLoadingProps) => {
               ) : (
                 <Skeleton className="h-4 w-32" />
               )}
+            </div>
+
+            {/* Extra skeleton lines to fill right side */}
+            <div className="space-y-3 pt-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-4/5" />
             </div>
           </div>
         </div>

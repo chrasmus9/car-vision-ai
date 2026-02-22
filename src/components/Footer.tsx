@@ -1,5 +1,4 @@
 import { Car } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
 
 const Footer = () => {
   return (
@@ -16,7 +15,7 @@ const Footer = () => {
         <p className="text-xs text-muted-foreground">
           © 2026 BilSjekk.ai — Et støtteverktøy for bilkjøp.
         </p>
-        <ThemeToggle />
+        
       </div>
     </footer>
   );
