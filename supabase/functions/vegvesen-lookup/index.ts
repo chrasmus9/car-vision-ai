@@ -195,10 +195,28 @@ Deno.serve(async (req) => {
     const forstegangsGodkjenningDato = godkjenning?.forstegangsGodkjenning?.forstegangsGodkjenningDato || null;
     const registrertForstegangNorgeDato = reg?.registrertForstegangNorgeDato || null;
 
-    // Extract bruktimportert boolean from Vegvesen
-    const bruktimportertMerknad = godkjenning?.kjoretoymerknad?.bruktimportert;
-    const bruktimportertReg = data?.kjoretoydataListe?.[0]?.registrering?.bruktimportert;
-    const bruktimportert = bruktimportertMerknad ?? bruktimportertReg ?? null;
+    // Log full response for debugging bruktimportert paths
+    const raw0 = data?.kjoretoydataListe?.[0];
+    console.log('Vegvesen raw0 keys:', raw0 ? Object.keys(raw0) : 'N/A');
+    console.log('godkjenning keys:', godkjenning ? Object.keys(godkjenning) : 'N/A');
+    console.log('godkjenning.kjoretoymerknad:', JSON.stringify(godkjenning?.kjoretoymerknad));
+    console.log('raw0.registrering:', JSON.stringify(raw0?.registrering));
+
+    // Check all 6 possible paths for bruktimportert, priority order
+    const bruktimportertPaths = [
+      godkjenning?.kjoretoymerknad?.bruktimportert,
+      // kjoretoymerknad may be an array of merknad objects
+      ...(Array.isArray(godkjenning?.kjoretoymerknad)
+        ? godkjenning.kjoretoymerknad.map((m: any) => m?.bruktimportert)
+        : []),
+      raw0?.registrering?.bruktimportert,
+      godkjenning?.registrering?.bruktimportert,
+      raw0?.bruktimportert,
+      data?.bruktimportert,
+    ];
+    console.log('bruktimportert candidates:', JSON.stringify(bruktimportertPaths));
+    const bruktimportert = bruktimportertPaths.find((v) => v !== null && v !== undefined) ?? null;
+    console.log('bruktimportert resolved:', bruktimportert);
 
     const result = {
       make: generelt?.merke?.[0]?.merke || '',
