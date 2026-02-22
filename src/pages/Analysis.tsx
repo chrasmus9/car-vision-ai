@@ -328,7 +328,15 @@ const Analysis = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        <CarOverview car={carData} />
+        <CarOverview car={{
+          ...carData,
+          maxTowingWeight: vegvesenData?.towWeight ? `${vegvesenData.towWeight.toLocaleString("nb-NO")} kg` : null,
+          topSpeed: vegvesenData?.maxSpeed ? `${Array.isArray(vegvesenData.maxSpeed) ? vegvesenData.maxSpeed[0] : vegvesenData.maxSpeed} km/t` : null,
+          horsepower: (() => {
+            const m = carData.power?.match(/([\d\s]+)\s*hk/i);
+            return m ? `${m[1].replace(/\s/g, '')} hk` : null;
+          })(),
+        }} />
 
         {/* Row A: AI-oppsummering + Prisanalyse side by side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -345,12 +353,9 @@ const Analysis = () => {
 
         {/* Row B: All info cards in one wrapping row */}
         <AllInfoCards
-          towWeight={vegvesenData?.towWeight}
           owners={carData.owners}
-          maxSpeed={vegvesenData?.maxSpeed}
           rekkevidde={carData.rekkevidde}
           isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
-          power={carData.power}
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
@@ -359,8 +364,6 @@ const Analysis = () => {
           bruktimportert={vegvesenData?.bruktimportert}
           regNr={carData.regNr}
           fuel={carData.fuel}
-          gearbox={carData.gearbox}
-          location={carData.location}
           consumption={vegvesenData?.consumption || carData.co2}
         />
 

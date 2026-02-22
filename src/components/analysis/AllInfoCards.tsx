@@ -1,12 +1,9 @@
-import { Weight, Users, Gauge, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Calendar, Fuel, MapPin, Settings } from "lucide-react";
+import { Users, Gauge, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Fuel } from "lucide-react";
 
 interface AllInfoCardsProps {
-  towWeight?: number | null;
   owners?: number | null;
-  maxSpeed?: number | null;
   rekkevidde?: string | null;
   isElectric: boolean;
-  power?: string | null;
   // Status cards
   lastEuKontroll: string | null;
   nextEuKontrollDeadline: string | null;
@@ -15,29 +12,22 @@ interface AllInfoCardsProps {
   registrertForstegangNorgeDato: string | null;
   bruktimportert?: boolean | string | null;
   regNr: string;
-  // New spec fields
   fuel?: string | null;
-  gearbox?: string | null;
-  location?: string | null;
   consumption?: string | null;
 }
 
 const AllInfoCards = (props: AllInfoCardsProps) => {
   const {
-    towWeight, owners, maxSpeed, rekkevidde,
-    isElectric, power,
+    owners, rekkevidde,
+    isElectric,
     lastEuKontroll, nextEuKontrollDeadline,
     mileage, year, registrertForstegangNorgeDato, bruktimportert, regNr,
-    fuel, gearbox, location, consumption,
+    fuel, consumption,
   } = props;
 
   // --- Rekkevidde ---
   const rkkMatches = rekkevidde ? [...rekkevidde.matchAll(/(\d+)\s*km/gi)] : [];
   const rkkValue = rkkMatches.length > 0 ? rkkMatches[rkkMatches.length - 1][1] : null;
-
-  // --- Power ---
-  const powerMatch = power?.match(/([\d\s]+)\s*hk/i);
-  const powerValue = powerMatch ? powerMatch[1].replace(/\s/g, '') : null;
 
   // --- Consumption for non-electric ---
   const getConsumptionInfo = () => {
@@ -117,27 +107,6 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Spec fields */}
-      {year > 0 && (
-        <InfoCard icon={Calendar} label="Modellår" value={String(year)} />
-      )}
-      {mileage && mileage !== "Ikke oppgitt" && (
-        <InfoCard icon={Gauge} label="Kilometerstand" value={mileage} />
-      )}
-      {fuel && fuel !== "Ikke oppgitt" && (
-        <InfoCard icon={isElectric ? Zap : Fuel} label="Drivstoff" value={fuel} />
-      )}
-      {gearbox && gearbox !== "Ikke oppgitt" && (
-        <InfoCard icon={Settings} label="Girkasse" value={gearbox} />
-      )}
-      {location && (
-        <InfoCard icon={MapPin} label="Sted" value={location} />
-      )}
-
-      {/* Key metrics */}
-      {towWeight != null && towWeight > 0 && (
-        <InfoCard icon={Weight} label="Maks tilhengervekt" value={`${towWeight.toLocaleString("nb-NO")} kg`} />
-      )}
       {owners != null && (
         <InfoCard
           icon={Users}
@@ -146,20 +115,13 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
           valueColor={owners <= 1 ? "text-green-600 dark:text-green-400" : owners <= 3 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"}
         />
       )}
-      {maxSpeed != null && (
-        <InfoCard icon={Gauge} label="Maks hastighet" value={`${Array.isArray(maxSpeed) ? maxSpeed[0] : maxSpeed} km/t`} />
-      )}
 
-      {/* WLTP for electric, Forbruk for non-electric */}
+      {/* WLTP for electric, Forbruk for non-electric (always visible) */}
       {isElectric && (
         <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={rkkValue ? `${rkkValue} km` : "—"} />
       )}
-      {!isElectric && consumptionInfo && (
-        <InfoCard icon={Fuel} label="Forbruk" value={consumptionInfo.value} valueColor={consumptionInfo.color} />
-      )}
-
-      {powerValue && (
-        <InfoCard icon={Gauge} label="Hestekrefter" value={`${powerValue} hk`} />
+      {!isElectric && (
+        <InfoCard icon={Fuel} label="Forbruk" value={consumptionInfo?.value || "—"} valueColor={consumptionInfo?.color} />
       )}
 
       {/* Status cards */}
