@@ -327,6 +327,15 @@ const Analysis = () => {
 
         {analysis && <AISummary summary={analysis.summary} />}
 
+        {priceNum > 0 && (
+          <PriceAnalysis
+            price={priceNum}
+            assessment={analysis?.priceAssessment}
+            priceStats={priceStats}
+            isLoadingSimilar={isLoadingSimilar}
+          />
+        )}
+
         {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} highlightsFirst />}
 
         {/* ROW 1: Key metrics */}
@@ -337,22 +346,12 @@ const Analysis = () => {
           fuelConsumption={vegvesenData?.fuelConsumption}
           rekkevidde={carData.rekkevidde}
           isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
+          electricConsumption={vegvesenData?.electricConsumption}
+          fuelType={carData.fuel}
         />
 
-        {/* ROW 2: Price + Recalls */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {priceNum > 0 && (
-            <PriceAnalysis
-              price={priceNum}
-              assessment={analysis?.priceAssessment}
-              priceStats={priceStats}
-              isLoadingSimilar={isLoadingSimilar}
-            />
-          )}
-          <div className={priceNum > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
-            {analysis && <RecallsSection recalls={analysis.recalls || []} />}
-          </div>
-        </div>
+        {/* ROW 2: Tilbakekallinger full width */}
+        {analysis && <RecallsSection recalls={analysis.recalls || []} />}
 
         {/* ROW 3: Status cards */}
         <StatusCardsRow
