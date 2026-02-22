@@ -110,42 +110,6 @@ const RiskAssessment = ({ risks, highlights, highlightsFirst }: RiskAssessmentPr
         </div>
       )}
 
-      {/* Risk summary bar */}
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium text-muted-foreground">Risikofordeling</h3>
-        <div className="flex h-2.5 rounded-full overflow-hidden bg-muted">
-          {highCount > 0 && (
-            <div className="bg-red-500 transition-all" style={{ width: `${(highCount / risks.length) * 100}%` }} />
-          )}
-          {medCount > 0 && (
-            <div className="bg-amber-500 transition-all" style={{ width: `${(medCount / risks.length) * 100}%` }} />
-          )}
-          {lowCount > 0 && (
-            <div className="bg-emerald-500 transition-all" style={{ width: `${(lowCount / risks.length) * 100}%` }} />
-          )}
-        </div>
-        <div className="flex gap-4 text-xs text-muted-foreground">
-          {highCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              Høy: {highCount}
-            </span>
-          )}
-          {medCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              Middels: {medCount}
-            </span>
-          )}
-          {lowCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Lav: {lowCount}
-            </span>
-          )}
-        </div>
-      </div>
-
       {/* Detailed risk section */}
       <div className="space-y-3">
         <h2 className="text-xl text-foreground">Risikovurdering</h2>

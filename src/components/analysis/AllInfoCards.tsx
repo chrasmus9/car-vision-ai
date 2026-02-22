@@ -1,4 +1,4 @@
-import { Weight, Users, Gauge, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
+import { Weight, Users, Gauge, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Calendar, Fuel, MapPin, Settings } from "lucide-react";
 
 interface AllInfoCardsProps {
   towWeight?: number | null;
@@ -15,6 +15,11 @@ interface AllInfoCardsProps {
   registrertForstegangNorgeDato: string | null;
   bruktimportert?: boolean | string | null;
   regNr: string;
+  // New spec fields
+  fuel?: string | null;
+  gearbox?: string | null;
+  location?: string | null;
+  consumption?: string | null;
 }
 
 const AllInfoCards = (props: AllInfoCardsProps) => {
@@ -23,6 +28,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     isElectric, power,
     lastEuKontroll, nextEuKontrollDeadline,
     mileage, year, registrertForstegangNorgeDato, bruktimportert, regNr,
+    fuel, gearbox, location, consumption,
   } = props;
 
   // --- Rekkevidde ---
@@ -32,6 +38,30 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
   // --- Power ---
   const powerMatch = power?.match(/([\d\s]+)\s*hk/i);
   const powerValue = powerMatch ? powerMatch[1].replace(/\s/g, '') : null;
+
+  // --- Consumption for non-electric ---
+  const getConsumptionInfo = () => {
+    if (!consumption) return null;
+    const match = consumption.match(/([\d,.]+)/);
+    if (!match) return null;
+    const val = parseFloat(match[1].replace(',', '.'));
+    if (isNaN(val)) return null;
+
+    const isDiesel = fuel?.toLowerCase()?.includes('diesel');
+    let color = "text-foreground";
+    if (isDiesel) {
+      if (val < 5) color = "text-green-600 dark:text-green-400";
+      else if (val <= 7) color = "text-yellow-600 dark:text-yellow-400";
+      else color = "text-red-600 dark:text-red-400";
+    } else {
+      if (val < 6) color = "text-green-600 dark:text-green-400";
+      else if (val <= 9) color = "text-yellow-600 dark:text-yellow-400";
+      else color = "text-red-600 dark:text-red-400";
+    }
+    return { value: `${val} l/100km`, color };
+  };
+
+  const consumptionInfo = !isElectric ? getConsumptionInfo() : null;
 
   // --- EU-kontroll ---
   const getEuStatus = () => {
@@ -87,7 +117,24 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Row 1: Key metrics */}
+      {/* Spec fields */}
+      {year > 0 && (
+        <InfoCard icon={Calendar} label="Modellår" value={String(year)} />
+      )}
+      {mileage && mileage !== "Ikke oppgitt" && (
+        <InfoCard icon={Gauge} label="Kilometerstand" value={mileage} />
+      )}
+      {fuel && fuel !== "Ikke oppgitt" && (
+        <InfoCard icon={isElectric ? Zap : Fuel} label="Drivstoff" value={fuel} />
+      )}
+      {gearbox && gearbox !== "Ikke oppgitt" && (
+        <InfoCard icon={Settings} label="Girkasse" value={gearbox} />
+      )}
+      {location && (
+        <InfoCard icon={MapPin} label="Sted" value={location} />
+      )}
+
+      {/* Key metrics */}
       {towWeight != null && towWeight > 0 && (
         <InfoCard icon={Weight} label="Maks tilhengervekt" value={`${towWeight.toLocaleString("nb-NO")} kg`} />
       )}
@@ -102,12 +149,20 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
       {maxSpeed != null && (
         <InfoCard icon={Gauge} label="Maks hastighet" value={`${Array.isArray(maxSpeed) ? maxSpeed[0] : maxSpeed} km/t`} />
       )}
-      <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={rkkValue ? `${rkkValue} km` : "—"} />
+
+      {/* WLTP for electric, Forbruk for non-electric */}
+      {isElectric && (
+        <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={rkkValue ? `${rkkValue} km` : "—"} />
+      )}
+      {!isElectric && consumptionInfo && (
+        <InfoCard icon={Fuel} label="Forbruk" value={consumptionInfo.value} valueColor={consumptionInfo.color} />
+      )}
+
       {powerValue && (
         <InfoCard icon={Gauge} label="Hestekrefter" value={`${powerValue} hk`} />
       )}
 
-      {/* Row 2: Status cards — same unified layout */}
+      {/* Status cards */}
       <InfoCard
         icon={EuIcon}
         label="EU-kontroll"
