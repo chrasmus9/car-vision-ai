@@ -174,25 +174,36 @@ Deno.serve(async (req) => {
     const karosseri = tekn?.karosseriOgLasteplan;
     const vekt = tekn?.vekter;
 
-    const miljo = tekn?.miljodata?.miljoOgdrivstoffGruppe?.[0];
-    const forbrukGruppe = miljo?.forbrukOgUtslipp?.[0];
-
-    // Extract WLTP fuel consumption (already in l/100km)
-    const wltpForbruk = forbrukGruppe?.wltpKjoretoyspesifikk?.forbrukKombinert ?? null;
-    // NEDC fallback
-    const nedcForbruk = forbrukGruppe?.wltpKjoretoyspesifikk?.nedcForbrukBlandetKjoring ?? null;
+    // Extract fuel consumption from miljoOgdrivstoffGruppe (loop all entries)
+    const miljoGrupper = tekn?.miljoOgdrivstoffGruppe || [];
+    const isLadbar = motor?.hybridKategori?.kodeVerdi === 'LADBAR';
     
-    const rawConsumption = wltpForbruk ?? nedcForbruk ?? null;
-
     let consumptionL100km: number | null = null;
-    if (rawConsumption != null) {
-      const strVal = String(rawConsumption).replace(',', '.');
-      const num = parseFloat(strVal);
-      if (!isNaN(num)) {
-        consumptionL100km = Math.round(num * 10) / 10;
+    for (const miljoEntry of miljoGrupper) {
+      const forbrukEntry = miljoEntry?.forbrukOgUtslipp?.[0];
+      const wltp = forbrukEntry?.wltpKjoretoyspesifikk;
+      if (!wltp) continue;
+
+      // LADBAR hybrids: prefer forbrukVektetKombinert
+      if (isLadbar && wltp.forbrukVektetKombinert != null) {
+        consumptionL100km = parseFloat(String(wltp.forbrukVektetKombinert).replace(',', '.'));
+        break;
+      }
+      // Regular / IKKE_LADBAR: forbrukKombinert
+      if (wltp.forbrukKombinert != null && consumptionL100km === null) {
+        consumptionL100km = parseFloat(String(wltp.forbrukKombinert).replace(',', '.'));
+      }
+      // NEDC fallback
+      if (consumptionL100km === null && wltp.nedcForbrukBlandetKjoring != null) {
+        consumptionL100km = parseFloat(String(wltp.nedcForbrukBlandetKjoring).replace(',', '.'));
       }
     }
-    console.log('Consumption raw:', rawConsumption, '-> l/100km:', consumptionL100km);
+    if (consumptionL100km != null && !isNaN(consumptionL100km)) {
+      consumptionL100km = Math.round(consumptionL100km * 10) / 10;
+    } else {
+      consumptionL100km = null;
+    }
+    console.log('Consumption raw from miljoOgdrivstoffGruppe -> l/100km:', consumptionL100km);
 
     // Extract hybridKategori
     const hybridKategori = motor?.hybridKategori?.kodeVerdi || null;
