@@ -42,6 +42,7 @@ export interface CarData {
   equipment: string[];
   owners?: number;
   rekkevidde?: string;
+  batteryCapacityKwh?: number;
 }
 
 export interface AnalysisData {
@@ -155,6 +156,7 @@ const Analysis = () => {
           equipment: raw.equipment || [],
           owners: raw.owners || undefined,
           rekkevidde: raw.rekkevidde || undefined,
+          batteryCapacityKwh: raw.batteryCapacityKwh || undefined,
         };
 
         setCarData(car);
@@ -347,7 +349,7 @@ const Analysis = () => {
           isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
           electricConsumption={vegvesenData?.electricConsumption}
           fuelType={carData.fuel}
-          batteryCapacityKwh={vegvesenData?.batteryCapacityKwh}
+          batteryCapacityKwh={carData.batteryCapacityKwh || vegvesenData?.batteryCapacityKwh}
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}

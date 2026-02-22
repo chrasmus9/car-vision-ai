@@ -222,36 +222,51 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fallback: search description text for owner patterns like "1-eier", "én eier", "2 eiere"
+    // Fallback: search description text for owner patterns
     if (!(carData as any).owners) {
       const descText = (description || '') + ' ' + textContent;
-      const ownerPatterns = [
-        /(\d)\s*-?\s*eiere?/i,
-        /én\s+eier/i,
-        /èn\s+eier/i,
+      const ownerPatterns: [RegExp, number | null][] = [
+        [/(\d)\s*-?\s*eiere?/i, null],
+        [/(\d)\s+tidligere\s+eiere?/i, null],
+        [/kun\s+hatt\s+(\d)/i, null],
+        [/hatt\s+(\d)\s+eiere?/i, null],
+        [/én\s+eier/i, 1],
+        [/èn\s+eier/i, 1],
+        [/solgt\s+ny\s+i\s+norge/i, 1],
       ];
-      for (const pat of ownerPatterns) {
+      for (const [pat, fixed] of ownerPatterns) {
         const m = descText.match(pat);
         if (m) {
+          if (fixed != null) {
+            (carData as any).owners = fixed;
+            break;
+          }
           if (m[1]) {
             const val = parseInt(m[1]);
             if (val >= 1 && val <= 10) {
               (carData as any).owners = val;
               break;
             }
-          } else {
-            // "én eier" / "èn eier" → 1
-            (carData as any).owners = 1;
-            break;
           }
         }
       }
     }
 
-    // Extract Rekkevidde (WLTP) for electric cars
+    // Extract Rekkevidde (WLTP) for electric cars — use last number+km match to skip disclaimer text
     const rekkeviddSpec = extractSpec('Rekkevidde');
     if (rekkeviddSpec) {
-      (carData as any).rekkevidde = rekkeviddSpec;
+      const kmMatches = [...rekkeviddSpec.matchAll(/(\d+)\s*km/gi)];
+      const lastKm = kmMatches[kmMatches.length - 1]?.[1];
+      (carData as any).rekkevidde = lastKm ? `${lastKm} km` : rekkeviddSpec;
+    }
+
+    // Extract Batterikapasitet from Finn structured spec
+    const batteriSpec = extractSpec('Batterikapasitet');
+    if (batteriSpec) {
+      const bMatch = batteriSpec.match(/([\d.,]+)/);
+      if (bMatch) {
+        (carData as any).batteryCapacityKwh = parseFloat(bMatch[1].replace(',', '.'));
+      }
     }
 
     // Extract equipment
