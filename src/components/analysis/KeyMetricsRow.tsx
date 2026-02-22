@@ -44,7 +44,7 @@ const KeyMetricsRow = ({ towWeight, owners, maxSpeed, fuelConsumption, rekkevidd
           icon: Zap,
           label: "Rekkevidde (WLTP)",
           sublabel: null,
-          value: rekkevidde ? rekkevidde.replace(/\s*km\s*/i, "").trim() + " km" : "—",
+          value: rekkevidde ? (rekkevidde.match(/(\d[\d\s]*)/)?.[1]?.trim() || rekkevidde) + " km" : "—",
           color: "text-foreground",
         }
       : {
