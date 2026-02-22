@@ -344,12 +344,9 @@ const Analysis = () => {
           towWeight={vegvesenData?.towWeight}
           owners={carData.owners}
           maxSpeed={vegvesenData?.maxSpeed}
-          fuelConsumption={vegvesenData?.fuelConsumption}
           rekkevidde={carData.rekkevidde}
           isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
-          electricConsumption={vegvesenData?.electricConsumption}
-          fuelType={carData.fuel}
-          batteryCapacityKwh={carData.batteryCapacityKwh || vegvesenData?.batteryCapacityKwh}
+          power={carData.power}
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
