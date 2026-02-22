@@ -20,7 +20,7 @@ interface SimilarListingsProps {
   isLoading?: boolean;
 }
 
-type SortKey = "title" | "sellerType" | "year" | "mileage" | "price" | "diff" | "gearbox" | "drivetrain" | "variant";
+type SortKey = "title" | "sellerType" | "year" | "mileage" | "price" | "diff" | "gearbox" | "drivetrain";
 type SortDir = "asc" | "desc";
 
 const parseMileage = (m: string) => parseInt(m.replace(/\D/g, "")) || 0;
@@ -63,7 +63,7 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
       case "diff": cmp = (a.price - currentPrice) - (b.price - currentPrice); break;
       case "gearbox": cmp = (a.gearbox || '').localeCompare(b.gearbox || ''); break;
       case "drivetrain": cmp = (a.drivetrain || '').localeCompare(b.drivetrain || ''); break;
-      case "variant": cmp = (a.variant || '').localeCompare(b.variant || ''); break;
+      
     }
     return sortDir === "asc" ? cmp : -cmp;
   });
@@ -94,7 +94,6 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                   { key: "mileage" as SortKey, label: "Km" },
                   { key: "gearbox" as SortKey, label: "Girkasse" },
                   { key: "drivetrain" as SortKey, label: "Hjuldrift" },
-                  { key: "variant" as SortKey, label: "Variant" },
                   { key: "price" as SortKey, label: "Pris" },
                   { key: "diff" as SortKey, label: "Forskjell" },
                 ]).map(col => (
@@ -138,7 +137,6 @@ const SimilarListings = ({ listings, currentPrice, isLoading }: SimilarListingsP
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.mileage}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.gearbox || '–'}</td>
                     <td className="px-4 py-3 text-sm text-foreground/80">{listing.drivetrain || '–'}</td>
-                    <td className="px-4 py-3 text-sm text-foreground/80">{listing.variant || '–'}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-foreground">
                       {listing.price.toLocaleString("nb-NO")} kr
                     </td>
