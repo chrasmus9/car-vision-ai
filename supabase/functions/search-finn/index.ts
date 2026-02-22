@@ -51,15 +51,15 @@ Deno.serve(async (req) => {
 
     const modelLower = model.toLowerCase();
 
-    // Debug: log fields for variant/drivetrain extraction
+    // Debug: log fields for drivetrain extraction
     if (docs.length > 0) {
       docs.slice(0, 3).forEach((d: any, i: number) => {
         console.log(`Doc ${i}:`, JSON.stringify({
           heading: d.heading,
-          model_specification: d.model_specification,
+          wheel_drive: d.wheel_drive,
           extras: d.extras,
-          facade_title: d.facade_title,
           labels: d.labels,
+          body_type: d.body_type,
         }));
       });
     }
@@ -115,16 +115,29 @@ Deno.serve(async (req) => {
           if (fromTitle.length > 1) variant = fromTitle;
         }
 
-        // 2. Drivetrain: check model_specification and title for keywords
+        // 2. Drivetrain: check wheel_drive field first, then text keywords
         let drivetrain = '';
-        const searchText = `${modelSpec} ${heading} ${facadeTitle}`;
         
-        if (/\b(AWD|4WD|xDrive|4x4|Firehjulsdrift|Firehjulstrekk|4MATIC|quattro|4motion|allgrip|e-4orce|Twin)\b/i.test(searchText)) {
-          drivetrain = 'Firehjulsdrift';
-        } else if (/\b(RWD|FWD|Tohjulsdrift|Bakhjulsdrift|Forhjulsdrift)\b/i.test(searchText)) {
-          drivetrain = 'Tohjulsdrift';
-        } else {
-          drivetrain = doc.wheel_drive || '';
+        // First: direct API field
+        if (doc.wheel_drive) {
+          drivetrain = doc.wheel_drive;
+        }
+        
+        // Second: check extras array (Finn sometimes puts drivetrain here)
+        if (!drivetrain && Array.isArray(doc.extras)) {
+          const extrasStr = doc.extras.join(' ');
+          if (/\b(Firehjulsdrift|4WD|AWD)\b/i.test(extrasStr)) drivetrain = 'Firehjulsdrift';
+          else if (/\b(Tohjulsdrift|Bakhjulsdrift|Forhjulsdrift)\b/i.test(extrasStr)) drivetrain = 'Tohjulsdrift';
+        }
+        
+        // Third: check title/spec text for keywords
+        if (!drivetrain) {
+          const searchText = `${modelSpec} ${heading} ${facadeTitle}`;
+          if (/\b(AWD|4WD|xDrive|4x4|Firehjulsdrift|Firehjulstrekk|4MATIC|quattro|4motion|allgrip|e-4orce|Twin)\b/i.test(searchText)) {
+            drivetrain = 'Firehjulsdrift';
+          } else if (/\b(RWD|FWD|Tohjulsdrift|Bakhjulsdrift|Forhjulsdrift)\b/i.test(searchText)) {
+            drivetrain = 'Tohjulsdrift';
+          }
         }
 
         // Clean drivetrain keywords from variant
