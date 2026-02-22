@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
 import EuKontrollSection from "./EuKontrollSection";
-import { supabase } from "@/integrations/supabase/client";
 
 interface StatusCardsRowProps {
   // EU-kontroll
@@ -159,38 +157,9 @@ const ImportCard = ({ firstRegNorwayDate, modelYear }: { firstRegNorwayDate: str
 
 // --- Heftelser card ---
 const HeftelserCard = ({ regNr }: { regNr: string }) => {
-  const [loading, setLoading] = useState(true);
-  const [count, setCount] = useState<number | null>(null);
-  const [items, setItems] = useState<{ type: string }[]>([]);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (!regNr) {
-      setLoading(false);
-      setFailed(true);
-      return;
-    }
-
-    const lookup = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("heftelser-lookup", {
-          body: { regNr },
-        });
-        if (error || !data?.success) {
-          setFailed(true);
-        } else {
-          setCount(data.data.count);
-          setItems(data.data.items || []);
-        }
-      } catch {
-        setFailed(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    lookup();
-  }, [regNr]);
+  const url = regNr
+    ? `https://www.brreg.no/heftelser/?regnr=${encodeURIComponent(regNr)}`
+    : "https://www.brreg.no/heftelser";
 
   return (
     <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-2">
@@ -198,34 +167,17 @@ const HeftelserCard = ({ regNr }: { regNr: string }) => {
         <p className="text-xs font-medium text-muted-foreground">Økonomiske heftelser</p>
         <FileWarning className="w-4 h-4 text-muted-foreground" />
       </div>
-      {loading ? (
-        <p className="text-sm font-semibold text-muted-foreground animate-pulse">Sjekker…</p>
-      ) : failed ? (
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-muted-foreground">Kunne ikke sjekkes</p>
-          <a
-            href="https://www.brreg.no/heftelser"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-primary hover:underline inline-flex items-center gap-0.5"
-          >
-            Sjekk manuelt <ExternalLink className="w-2.5 h-2.5" />
-          </a>
-        </div>
-      ) : count === 0 ? (
-        <p className="text-sm font-semibold text-green-600 dark:text-green-400">Ingen heftelser ✓</p>
-      ) : (
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-            {count} heftelse{count !== 1 ? "r" : ""} funnet
-          </p>
-          {items.length > 0 && (
-            <p className="text-[10px] text-muted-foreground leading-snug">
-              {items.map(i => i.type).join(" · ")}
-            </p>
-          )}
-        </div>
-      )}
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+      >
+        Sjekk heftelser <ExternalLink className="w-3.5 h-3.5" />
+      </a>
+      <p className="text-[10px] text-muted-foreground leading-snug">
+        Gratis offisiell sjekk via Brønnøysundregistrene
+      </p>
     </div>
   );
 };

@@ -327,6 +327,8 @@ const Analysis = () => {
 
         {analysis && <AISummary summary={analysis.summary} />}
 
+        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
+
         {/* ROW 1: Key metrics */}
         <KeyMetricsRow
           towWeight={vegvesenData?.towWeight}
@@ -363,8 +365,6 @@ const Analysis = () => {
           modelYear={carData.year}
           regNr={carData.regNr}
         />
-
-        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
 
         <SimilarListings
           listings={similarListings}
