@@ -40,7 +40,7 @@ const PriceAnalysis = ({ price, assessment, similarListings, priceStats, isLoadi
   const indicator = getPriceIndicator();
 
   return (
-    <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-3">
+    <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-3 h-full">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-foreground">Prisanalyse</h2>
         {indicator && (

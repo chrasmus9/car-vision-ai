@@ -6,8 +6,7 @@ import CarOverview from "@/components/analysis/CarOverview";
 import RiskAssessment from "@/components/analysis/RiskAssessment";
 import PriceAnalysis from "@/components/analysis/PriceAnalysis";
 import SimilarListings from "@/components/analysis/SimilarListings";
-import KeyMetricsRow from "@/components/analysis/KeyMetricsRow";
-import StatusCardsRow from "@/components/analysis/StatusCardsRow";
+import AllInfoCards from "@/components/analysis/AllInfoCards";
 import AISummary from "@/components/analysis/AISummary";
 import RecallsSection from "@/components/analysis/RecallsSection";
 import AnalysisLoading from "@/components/analysis/AnalysisLoading";
@@ -325,21 +324,21 @@ const Analysis = () => {
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <CarOverview car={carData} />
 
-        {analysis && <AISummary summary={analysis.summary} />}
+        {/* Row A: AI-oppsummering + Prisanalyse side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <AISummary summary={analysis?.summary || ""} />
+          {priceNum > 0 && (
+            <PriceAnalysis
+              price={priceNum}
+              assessment={analysis?.priceAssessment}
+              priceStats={priceStats}
+              isLoadingSimilar={isLoadingSimilar}
+            />
+          )}
+        </div>
 
-        {priceNum > 0 && (
-          <PriceAnalysis
-            price={priceNum}
-            assessment={analysis?.priceAssessment}
-            priceStats={priceStats}
-            isLoadingSimilar={isLoadingSimilar}
-          />
-        )}
-
-        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} highlightsFirst />}
-
-        {/* ROW 1: Key metrics */}
-        <KeyMetricsRow
+        {/* Row B: All info cards in one wrapping row */}
+        <AllInfoCards
           towWeight={vegvesenData?.towWeight}
           owners={carData.owners}
           maxSpeed={vegvesenData?.maxSpeed}
@@ -348,13 +347,6 @@ const Analysis = () => {
           isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
           electricConsumption={vegvesenData?.electricConsumption}
           fuelType={carData.fuel}
-        />
-
-        {/* ROW 2: Tilbakekallinger full width */}
-        {analysis && <RecallsSection recalls={analysis.recalls || []} />}
-
-        {/* ROW 3: Status cards */}
-        <StatusCardsRow
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
@@ -364,6 +356,12 @@ const Analysis = () => {
           modelYear={carData.year}
           regNr={carData.regNr}
         />
+
+        {/* Høydepunkter + Risikoer */}
+        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} highlightsFirst />}
+
+        {/* Tilbakekallinger */}
+        {analysis && <RecallsSection recalls={analysis.recalls || []} />}
 
         <SimilarListings
           listings={similarListings}

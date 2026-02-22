@@ -6,7 +6,7 @@ interface AISummaryProps {
 
 const AISummary = ({ summary }: AISummaryProps) => {
   return (
-    <div className="bg-secondary/50 border border-primary/20 rounded-2xl p-6 space-y-3">
+    <div className="bg-secondary/50 border border-primary/20 rounded-2xl p-6 space-y-3 h-full">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
           <Sparkles className="w-4 h-4 text-primary-foreground" />
