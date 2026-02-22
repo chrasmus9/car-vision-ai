@@ -9,11 +9,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { regNr } = await req.json();
+    const { regNr, vin } = await req.json();
 
-    if (!regNr) {
+    if (!regNr && !vin) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Registration number is required' }),
+        JSON.stringify({ success: false, error: 'VIN or registration number is required', svvCode: 'SVV-004' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -26,40 +26,109 @@ Deno.serve(async (req) => {
       );
     }
 
-    const cleanRegNr = regNr.replace(/\s/g, '').toUpperCase();
-    
-    // Validate Norwegian plate format: 2 letters + 5 digits (new) or 2 letters + 4 digits (old)
-    if (!/^[A-ZÆØÅ]{2}\d{4,5}$/.test(cleanRegNr)) {
-      console.error('Invalid regNr format:', cleanRegNr);
+    let svvCode = '';
+    let lookupMethod = '';
+    let response: Response | null = null;
+
+    // Try VIN first
+    if (vin) {
+      const cleanVin = vin.replace(/\s/g, '').toUpperCase();
+      console.log('Trying VIN lookup:', cleanVin);
+      lookupMethod = 'vin';
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        response = await fetch(
+          `https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?understellsnummer=${cleanVin}`,
+          {
+            headers: {
+              'SVV-Authorization': `Apikey ${apiKey}`,
+              'Accept': 'application/json',
+            },
+            signal: controller.signal,
+          }
+        );
+        clearTimeout(timeout);
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          if (!regNr) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Vegvesen API timed out', svvCode: 'SVV-006' }),
+              { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          console.warn('VIN lookup timed out, falling back to regNr');
+          response = null;
+        } else {
+          throw e;
+        }
+      }
+
+      if (response && !response.ok) {
+        console.warn('VIN lookup failed with status:', response.status, '- falling back to regNr');
+        response = null;
+      }
+    }
+
+    // Fall back to registration number
+    if (!response && regNr) {
+      const cleanRegNr = regNr.replace(/\s/g, '').toUpperCase();
+      
+      if (!/^[A-ZÆØÅ]{2}\d{4,5}$/.test(cleanRegNr)) {
+        console.error('Invalid regNr format:', cleanRegNr);
+        return new Response(
+          JSON.stringify({ success: false, error: `Invalid registration number format: ${cleanRegNr}`, svvCode: 'SVV-004' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('Looking up by regNr:', cleanRegNr);
+      lookupMethod = 'regNr';
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        response = await fetch(
+          `https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=${cleanRegNr}`,
+          {
+            headers: {
+              'SVV-Authorization': `Apikey ${apiKey}`,
+              'Accept': 'application/json',
+            },
+            signal: controller.signal,
+          }
+        );
+        clearTimeout(timeout);
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Vegvesen API timed out', svvCode: 'SVV-006' }),
+            { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        throw e;
+      }
+    }
+
+    if (!response) {
       return new Response(
-        JSON.stringify({ success: false, error: `Invalid registration number format: ${cleanRegNr}` }),
+        JSON.stringify({ success: false, error: 'No valid identifier for lookup', svvCode: 'SVV-004' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    console.log('Looking up vehicle:', cleanRegNr);
-
-    const response = await fetch(
-      `https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=${cleanRegNr}`,
-      {
-        headers: {
-          'SVV-Authorization': `Apikey ${apiKey}`,
-          'Accept': 'application/json',
-        },
-      }
-    );
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Vegvesen API error:', response.status, errorText);
       if (response.status === 404) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Kjøretøy ikke funnet' }),
+          JSON.stringify({ success: false, error: 'Kjøretøy ikke funnet', svvCode: `SVV-005:${response.status}` }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       return new Response(
-        JSON.stringify({ success: false, error: `Vegvesen lookup failed: ${response.status}` }),
+        JSON.stringify({ success: false, error: `Vegvesen lookup failed: ${response.status}`, svvCode: `SVV-005:${response.status}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -71,8 +140,25 @@ Deno.serve(async (req) => {
     } catch {
       console.error('Failed to parse Vegvesen response:', text.substring(0, 200));
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid response from Vegvesen' }),
+        JSON.stringify({ success: false, error: 'Invalid response from Vegvesen', svvCode: 'SVV-003' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Determine SVV code
+    const hasData = data?.kjoretoydataListe?.length > 0;
+    if (!hasData) {
+      svvCode = 'SVV-003';
+    } else if (lookupMethod === 'vin') {
+      svvCode = 'SVV-001';
+    } else {
+      svvCode = vin ? 'SVV-002' : 'SVV-001'; // SVV-002 means VIN was tried but failed, fell back
+    }
+
+    if (!hasData) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'No vehicle data returned', svvCode }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -89,13 +175,10 @@ Deno.serve(async (req) => {
     const forbruk = miljo?.forbrukOgUtslipp?.[0];
 
     const result = {
-      // Basic info
       make: generelt?.merke?.[0]?.merke || '',
       model: generelt?.handelsbetegnelse?.[0] || '',
       variant: generelt?.typebetegnelse || '',
-      // Registration
       firstRegistration: reg?.registrertForstegangNorgeDato || '',
-      // Engine
       fuel: motor?.motor?.[0]?.drivstoff?.[0]?.drivstoffKode?.kodeNavn || '',
       power: motor?.motor?.[0]?.maksNettoEffekt ? `${motor.motor[0].maksNettoEffekt} kW` : '',
       powerHp: motor?.motor?.[0]?.maksNettoEffekt ? Math.round(motor.motor[0].maksNettoEffekt * 1.36) : null,
@@ -103,27 +186,19 @@ Deno.serve(async (req) => {
       gearbox: motor?.girkassetype?.kodeNavn || '',
       drivetrain: motor?.kjoretoydrift?.kodeNavn || '',
       maxSpeed: Array.isArray(motor?.maksimumHastighet) ? motor.maksimumHastighet[0] : (motor?.maksimumHastighet || null),
-      // Body
       color: karosseri?.rpieFarger?.[0]?.fpipigeKode?.kodeNavn || karosseri?.kapirosspieritype?.kodeNavn || '',
       seats: karosseri?.antallSitteplasser || null,
       weight: vekt?.egenvekt || null,
       towWeight: vekt?.tillattTilhengervektMedBrems || null,
-      // EU-kontroll (PKK)
       lastEuKontroll: pkk?.sistGodkjent || null,
       nextEuKontrollDeadline: pkk?.kontrollfrist || null,
-      // Fuel consumption
       fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
       electricConsumption: forbruk?.elektriskEnergiforbruk || forbruk?.elektriskRekkeviddeKm || null,
+      svvCode,
     };
 
-    // Try to get more fields from the raw data
     const raw = data?.kjoretoydataListe?.[0];
     if (raw) {
-      // Model year
-      const modelYear = tekn?.generpieltOmKjoretoy?.merpikepiaar || raw?.godkjenning?.forsteGangRegistrertDato?.substring(0, 4);
-      if (modelYear) result.make; // keep as-is
-
-      // Color from different path
       if (!result.color) {
         const farger = karosseri?.fpipigepirimipirFarger || karosseri?.rpieFarger;
         if (farger?.[0]) {
@@ -132,10 +207,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Vegvesen lookup result:', JSON.stringify(result));
+    console.log('Vegvesen lookup result:', JSON.stringify({ svvCode, lookupMethod }));
 
     return new Response(
-      JSON.stringify({ success: true, data: result, raw: data }),
+      JSON.stringify({ success: true, data: result, raw: data, svvCode }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
