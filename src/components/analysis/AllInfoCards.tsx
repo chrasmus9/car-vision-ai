@@ -83,8 +83,8 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
   let consumptionValue = isElectric ? electricConsumption : fuelConsumption;
   let consumptionCalculated = false;
   if (isElectric && consumptionValue == null && batteryCapacityKwh && rekkevidde) {
-    const rangeMatch = rekkevidde.match(/(\d+)\s*km/);
-    const wltpRangeKm = rangeMatch ? parseInt(rangeMatch[1]) : null;
+    const matches = [...rekkevidde.matchAll(/(\d+)\s*km/gi)];
+    const wltpRangeKm = matches.length > 0 ? parseInt(matches[matches.length - 1][1]) : null;
     if (wltpRangeKm && wltpRangeKm > 0) {
       consumptionValue = Math.round((batteryCapacityKwh / wltpRangeKm) * 100 * 10) / 10;
       consumptionCalculated = true;
@@ -95,7 +95,8 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     ? `${consumptionValue.toLocaleString("nb-NO", { minimumFractionDigits: isElectric ? 0 : 1, maximumFractionDigits: 1 })} ${consumptionUnit}`
     : "—";
 
-  const rkkValue = rekkevidde ? (rekkevidde.match(/(\d[\d\s]*)/)?.[1]?.trim() || null) : null;
+  const rkkMatches = rekkevidde ? [...rekkevidde.matchAll(/(\d+)\s*km/gi)] : [];
+  const rkkValue = rkkMatches.length > 0 ? rkkMatches[rkkMatches.length - 1][1] : null;
 
   // --- EU-kontroll helpers ---
   const getEuStatus = () => {
@@ -231,11 +232,9 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
           <Globe className="w-4 h-4 text-muted-foreground" />
         </div>
         <p className={`text-sm font-semibold ${importStatus.color}`}>{importStatus.label}</p>
-        {importStatus.detail ? (
+        {importStatus.detail && (
           <p className="text-[10px] text-muted-foreground leading-snug">{importStatus.detail}</p>
-        ) : importStatus.label === "—" ? (
-          <p className="text-[10px] text-muted-foreground">Mangler data</p>
-        ) : null}
+        )}
       </div>
 
       <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-2 min-w-[180px] flex-1 basis-[180px]">
