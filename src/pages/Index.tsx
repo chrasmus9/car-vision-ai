@@ -5,15 +5,28 @@ import FavoritesSection from "@/components/FavoritesSection";
 import RecentSection from "@/components/RecentSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/components/AuthProvider";
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
-      <MyAnalysesSection />
-      <FavoritesSection />
-      <RecentSection />
+      {user ? (
+        <>
+          <MyAnalysesSection />
+          <FavoritesSection />
+          <RecentSection />
+        </>
+      ) : (
+        <>
+          <RecentSection />
+          <MyAnalysesSection />
+          <FavoritesSection />
+        </>
+      )}
       <FeaturesSection />
       <Footer />
     </div>
