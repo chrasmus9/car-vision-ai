@@ -63,7 +63,8 @@ const Analysis = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
-  const [loadingStep, setLoadingStep] = useState<"scraping" | "analyzing">("scraping");
+  const [loadingStep, setLoadingStep] = useState<"scraping" | "vegvesen" | "analyzing" | "finalizing" | "done">("scraping");
+  const [fromCache, setFromCache] = useState(false);
   const [carData, setCarData] = useState<CarData | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +96,7 @@ const Analysis = () => {
             const cacheAge = (Date.now() - new Date(cached.created_at).getTime()) / (1000 * 60 * 60);
             if (cacheAge < CACHE_TTL_HOURS) {
               // Use cached data — skip loading entirely
+              setFromCache(true);
               setCarData(cached.car_data as unknown as CarData);
               setAnalysis(cached.analysis_data as unknown as AnalysisData);
               setVegvesenData(cached.vegvesen_data);
@@ -161,7 +163,8 @@ const Analysis = () => {
 
         setCarData(car);
 
-        // Step 2: Vegvesen lookup (VIN first, fallback to regNr)
+        // Step 2: Vegvesen lookup
+        setLoadingStep("vegvesen");
         let vegvesen = null;
         if (car.vin || car.regNr) {
           try {
@@ -287,6 +290,7 @@ const Analysis = () => {
           variant: "destructive",
         });
       } finally {
+        setLoadingStep("done");
         setLoading(false);
       }
     };
@@ -298,7 +302,7 @@ const Analysis = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <AnalysisLoading />
+        <AnalysisLoading loadingStep={loadingStep} fromCache={fromCache} />
         <Footer />
       </div>
     );
@@ -354,6 +358,10 @@ const Analysis = () => {
           registrertForstegangNorgeDato={vegvesenData?.registrertForstegangNorgeDato}
           bruktimportert={vegvesenData?.bruktimportert}
           regNr={carData.regNr}
+          fuel={carData.fuel}
+          gearbox={carData.gearbox}
+          location={carData.location}
+          consumption={vegvesenData?.consumption || carData.co2}
         />
 
         {/* Høydepunkter + Risikoer */}
