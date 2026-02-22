@@ -1,7 +1,5 @@
 import { Weight, Users, Gauge, Fuel, Zap, BatteryCharging, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
 
-const isDev = import.meta.env.DEV;
-
 interface AllInfoCardsProps {
   // Key metrics
   towWeight?: number | null;
@@ -21,7 +19,6 @@ interface AllInfoCardsProps {
   firstRegNorwayDate: string | null;
   modelYear: number;
   regNr: string;
-  svvCode?: string;
 }
 
 const AllInfoCards = (props: AllInfoCardsProps) => {
@@ -30,7 +27,6 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     isElectric, electricConsumption, fuelType,
     lastEuKontroll, nextEuKontrollDeadline,
     mileage, year, firstRegYear, firstRegNorwayDate, modelYear, regNr,
-    svvCode,
   } = props;
 
   const isDiesel = fuelType?.toLowerCase()?.includes("diesel") || false;
@@ -141,10 +137,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     : "https://rettsstiftelser.brreg.no/nb/oppslag/motorvogn";
 
   return (
-    <div className="flex flex-wrap gap-3 relative">
-      {isDev && svvCode && (
-        <span className="absolute -top-5 right-0 text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-mono">{svvCode}</span>
-      )}
+    <div className="flex flex-wrap gap-3">
       {/* Key metrics cards */}
       <InfoCard
         icon={Weight}
