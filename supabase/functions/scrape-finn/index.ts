@@ -292,14 +292,20 @@ Deno.serve(async (req) => {
       (carData as any).equipment = items.map(m => m[1].replace(/<[^>]*>/g, '').trim()).filter(Boolean);
     }
 
-    // Extract Garanti section
-    const garantiSection = html.match(/Garanti[\s\S]*?(?=<\/section|Utstyr|Beskrivelse|Service|$)/i)?.[0] || '';
-    const garantiText = garantiSection.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    // Look for known patterns
-    const garantiMatch = garantiText.match(/((?:Bruktbilgaranti|NAF\s+Bruktbilgaranti|Fabrikkgaranti|Nybilgaranti|Garantiforsikring)[^.]*?)(?:\.|$)/i)
-      || garantiText.match(/Garanti\s+(.*?)(?:\s{2,}|$)/i);
-    if (garantiMatch) {
-      (carData as any).garanti = garantiMatch[1].trim().substring(0, 100);
+    // Extract Garanti from structured tab section (not free text description)
+    // Pattern in raw text: "Garanti\nBruktbilgaranti\nGarantiens varighet\n6 måneder\nGaranti inntil\n10 000 km"
+    const garantiStructured = textContent.match(
+      /(?:^|\s)Garanti\s+(Bruktbilgaranti|NAF\s+Bruktbilgaranti|Fabrikkgaranti|Nybilgaranti|Garantiforsikring)\s+(?:Garantiens\s+varighet\s+([\d]+\s*(?:måneder|mnd|år)))?\s*(?:Garanti\s+inntil\s+([\d\s]+\s*km))?/i
+    );
+    if (garantiStructured) {
+      const type = garantiStructured[1].trim();
+      const varighet = garantiStructured[2]?.trim().replace('måneder', 'mnd.') || '';
+      const kmGrense = garantiStructured[3]?.trim() || '';
+      const parts = [type];
+      if (varighet || kmGrense) {
+        parts.push([varighet, kmGrense].filter(Boolean).join(' / '));
+      }
+      (carData as any).garanti = parts.join(' · ');
     }
 
     // Extract Servicehistorikk section

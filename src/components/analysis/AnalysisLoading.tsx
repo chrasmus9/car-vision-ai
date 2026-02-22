@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { Car } from "lucide-react";
 
-const tips = [
-  "Visste du at 1 av 3 bruktbiler har skjulte heftelser?",
-  "En EU-kontroll avdekker ikke skjulte feil — AI-analyse gjør det.",
-  "Kilometerstand kan justeres — sjekk alltid historikk.",
-];
-
 const statusTexts: [number, string][] = [
   [0, "Finner annonsen på Finn... 🔍"],
   [15, "Sjekker kjøretøyhistorikk hos Vegvesen... 🏛️"],
@@ -28,8 +22,6 @@ interface AnalysisLoadingProps {
 }
 
 const AnalysisLoading = ({ loadingStep = "scraping", fromCache = false }: AnalysisLoadingProps) => {
-  const [tipIndex, setTipIndex] = useState(0);
-  const [fade, setFade] = useState(true);
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -69,18 +61,6 @@ const AnalysisLoading = ({ loadingStep = "scraping", fromCache = false }: Analys
     return () => clearInterval(interval);
   }, [loadingStep, fromCache]);
 
-  // Tips rotation
-  useEffect(() => {
-    if (fromCache) return;
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setTipIndex((i) => (i + 1) % tips.length);
-        setFade(true);
-      }, 300);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [fromCache]);
 
   if (fromCache || !visible) return null;
 
@@ -122,17 +102,8 @@ const AnalysisLoading = ({ loadingStep = "scraping", fromCache = false }: Analys
       </div>
 
       {/* Status text */}
-      <p className="text-base text-muted-foreground text-center mb-8">
+      <p className="text-base text-muted-foreground text-center">
         {getStatusText(progress)}
-      </p>
-
-      {/* Fun fact */}
-      <p
-        className={`text-sm text-muted-foreground/60 italic text-center max-w-sm transition-opacity duration-300 ${
-          fade ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {tips[tipIndex]}
       </p>
     </div>
   );
