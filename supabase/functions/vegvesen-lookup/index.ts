@@ -175,28 +175,28 @@ Deno.serve(async (req) => {
     const vekt = tekn?.vekter;
 
     const miljo = tekn?.miljodata?.miljoOgdrivstoffGruppe?.[0];
-    const forbruk = miljo?.forbrukOgUtslipp?.[0];
+    const forbrukGruppe = miljo?.forbrukOgUtslipp?.[0];
 
-    // Extract fuel consumption from multiple possible paths
-    const rawConsumption =
-      motor?.forbrukOgUtslipp?.forbrukBlandet ??
-      motor?.forbrukOgUtslipp?.forbruk ??
-      motor?.drivstofforbruk ??
-      forbruk?.forbrukBlandetKjoring ??
-      forbruk?.forbruk ??
-      null;
+    // Extract WLTP fuel consumption (already in l/100km)
+    const wltpForbruk = forbrukGruppe?.wltpKjoretoyspesifikk?.forbrukKombinert ?? null;
+    // NEDC fallback
+    const nedcForbruk = forbrukGruppe?.wltpKjoretoyspesifikk?.nedcForbrukBlandetKjoring ?? null;
+    
+    const rawConsumption = wltpForbruk ?? nedcForbruk ?? null;
 
-    // Parse and normalize to l/100km
     let consumptionL100km: number | null = null;
     if (rawConsumption != null) {
       const strVal = String(rawConsumption).replace(',', '.');
       const num = parseFloat(strVal);
       if (!isNaN(num)) {
-        // Vegvesen stores as "liter per 10 km" (e.g. 0.64 = 6.4 l/100km)
-        consumptionL100km = num < 2 ? Math.round(num * 100) / 10 : Math.round(num * 10) / 10;
+        consumptionL100km = Math.round(num * 10) / 10;
       }
     }
     console.log('Consumption raw:', rawConsumption, '-> l/100km:', consumptionL100km);
+
+    // Extract hybridKategori
+    const hybridKategori = motor?.hybridKategori?.kodeVerdi || null;
+    console.log('hybridKategori:', hybridKategori);
 
     // Extract battery capacity from elMotor data
     const elMotorer = motor?.elMotor || [];
@@ -262,8 +262,10 @@ Deno.serve(async (req) => {
       lastEuKontroll: pkk?.sistGodkjent || null,
       nextEuKontrollDeadline: pkk?.kontrollfrist || null,
       fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
+      fuelConsumption: consumptionL100km,
       consumption: consumptionL100km,
       batteryCapacityKwh,
+      hybridKategori,
       bruktimportert,
       svvCode,
     };

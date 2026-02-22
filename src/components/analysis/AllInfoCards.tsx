@@ -1,10 +1,11 @@
-import { Users, Gauge, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Fuel } from "lucide-react";
+import { Users, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Fuel } from "lucide-react";
 
 interface AllInfoCardsProps {
   owners?: number | null;
   rekkevidde?: string | null;
   isElectric: boolean;
-  // Status cards
+  isHybrid?: boolean;
+  hybridKategori?: string | null;
   lastEuKontroll: string | null;
   nextEuKontrollDeadline: string | null;
   mileage: string;
@@ -19,17 +20,23 @@ interface AllInfoCardsProps {
 const AllInfoCards = (props: AllInfoCardsProps) => {
   const {
     owners, rekkevidde,
-    isElectric,
+    isElectric, isHybrid, hybridKategori,
     lastEuKontroll, nextEuKontrollDeadline,
     mileage, year, registrertForstegangNorgeDato, bruktimportert, regNr,
     fuel, consumption,
   } = props;
 
+  // Determine which cards to show
+  const showWLTP = isElectric || (isHybrid && hybridKategori === "LADBAR");
+  const showForbruk = !isElectric && (!isHybrid || hybridKategori !== undefined);
+  // For non-ladbar hybrid, hide WLTP
+  const showForbrukOnly = !isElectric && (!isHybrid || hybridKategori === "IKKE_LADBAR" || (!hybridKategori && !isElectric));
+
   // --- Rekkevidde ---
   const rkkMatches = rekkevidde ? [...rekkevidde.matchAll(/(\d+)\s*km/gi)] : [];
   const rkkValue = rkkMatches.length > 0 ? rkkMatches[rkkMatches.length - 1][1] : null;
 
-  // --- Consumption for non-electric ---
+  // --- Consumption ---
   const getConsumptionInfo = () => {
     if (!consumption) return null;
     const match = consumption.match(/([\d,.]+)/);
@@ -52,7 +59,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     return { value: `${display} l/100km`, color };
   };
 
-  const consumptionInfo = !isElectric ? getConsumptionInfo() : null;
+  const consumptionInfo = getConsumptionInfo();
 
   // --- EU-kontroll ---
   const getEuStatus = () => {
@@ -87,13 +94,9 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
 
   // --- Import ---
   const getImportStatus = () => {
-    if (bruktimportert === null || bruktimportert === undefined) {
-      return { color: "text-muted-foreground", label: "—" };
-    }
+    if (bruktimportert === null || bruktimportert === undefined) return { color: "text-muted-foreground", label: "—" };
     const isImported = bruktimportert === true || bruktimportert === "Ja";
-    if (isImported) {
-      return { color: "text-red-600 dark:text-red-400", label: "Ja" };
-    }
+    if (isImported) return { color: "text-red-600 dark:text-red-400", label: "Ja" };
     return { color: "text-green-600 dark:text-green-400", label: "Nei" };
   };
 
@@ -117,15 +120,16 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
         />
       )}
 
-      {/* WLTP for electric, Forbruk for non-electric (always visible) */}
-      {isElectric && (
+      {/* WLTP for electric + ladbar hybrid */}
+      {showWLTP && (
         <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={rkkValue ? `${rkkValue} km` : "—"} />
       )}
-      {!isElectric && (
+
+      {/* Forbruk for non-electric (always visible), also for ladbar hybrid */}
+      {(showForbrukOnly || (isHybrid && hybridKategori === "LADBAR")) && (
         <InfoCard icon={Fuel} label="Forbruk" value={consumptionInfo?.value || "—"} valueColor={consumptionInfo?.color} />
       )}
 
-      {/* Status cards */}
       <InfoCard
         icon={EuIcon}
         label="EU-kontroll"

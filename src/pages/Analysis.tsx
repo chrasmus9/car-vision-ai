@@ -12,7 +12,7 @@ import RecallsSection from "@/components/analysis/RecallsSection";
 import AnalysisLoading from "@/components/analysis/AnalysisLoading";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
-import { useToast } from "@/hooks/use-toast";
+
 
 export interface CarData {
   title: string;
@@ -59,7 +59,7 @@ const CACHE_TTL_HOURS = 24;
 const Analysis = () => {
   const [searchParams] = useSearchParams();
   const url = searchParams.get("url") || "";
-  const { toast } = useToast();
+  
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -284,11 +284,7 @@ const Analysis = () => {
       } catch (err: any) {
         console.error("Analysis error:", err);
         setError(err.message);
-        toast({
-          title: "Feil",
-          description: err.message,
-          variant: "destructive",
-        });
+        // Error is shown in the error UI below
       } finally {
         setLoadingStep("done");
         setLoading(false);
@@ -349,7 +345,9 @@ const Analysis = () => {
         <AllInfoCards
           owners={carData.owners}
           rekkevidde={carData.rekkevidde}
-          isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
+          isElectric={carData.fuel?.toLowerCase() === 'el' || carData.fuel?.toLowerCase()?.includes('elektr') || false}
+          hybridKategori={vegvesenData?.hybridKategori || null}
+          isHybrid={carData.fuel?.toLowerCase()?.includes('hybrid') || false}
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
