@@ -165,7 +165,8 @@ Deno.serve(async (req) => {
     }
 
     // Extract relevant fields
-    const tekn = data?.kjoretoydataListe?.[0]?.godkjenning?.tekniskGodkjenning?.tekniskeData;
+    const godkjenning = data?.kjoretoydataListe?.[0]?.godkjenning;
+    const tekn = godkjenning?.tekniskGodkjenning?.tekniskeData;
     const reg = data?.kjoretoydataListe?.[0]?.forstegangsregistrering;
     const pkk = data?.kjoretoydataListe?.[0]?.periodiskKjoretoyKontroll;
     const generelt = tekn?.generpieltOmKjoretoy || tekn?.generelt;
@@ -176,11 +177,31 @@ Deno.serve(async (req) => {
     const miljo = tekn?.miljodata?.miljoOgdrivstoffGruppe?.[0];
     const forbruk = miljo?.forbrukOgUtslipp?.[0];
 
+    // Extract battery capacity from elMotor data
+    const elMotorer = motor?.elMotor || [];
+    let batteryCapacityKwh: number | null = null;
+    for (const em of (Array.isArray(elMotorer) ? elMotorer : [elMotorer])) {
+      if (em?.batteristorrelse) {
+        batteryCapacityKwh = em.batteristorrelse;
+        break;
+      }
+      if (em?.batterikapasitet) {
+        batteryCapacityKwh = em.batterikapasitet;
+        break;
+      }
+    }
+
+    // Extract first approval date (anywhere in world) and first Norway registration
+    const forstegangsGodkjenningDato = godkjenning?.forstegangsGodkjenning?.forstegangsGodkjenningDato || null;
+    const registrertForstegangNorgeDato = reg?.registrertForstegangNorgeDato || null;
+
     const result = {
       make: generelt?.merke?.[0]?.merke || '',
       model: generelt?.handelsbetegnelse?.[0] || '',
       variant: generelt?.typebetegnelse || '',
-      firstRegistration: reg?.registrertForstegangNorgeDato || '',
+      firstRegistration: registrertForstegangNorgeDato || '',
+      forstegangsGodkjenningDato,
+      registrertForstegangNorgeDato,
       fuel: motor?.motor?.[0]?.drivstoff?.[0]?.drivstoffKode?.kodeNavn || '',
       power: motor?.motor?.[0]?.maksNettoEffekt ? `${motor.motor[0].maksNettoEffekt} kW` : '',
       powerHp: motor?.motor?.[0]?.maksNettoEffekt ? Math.round(motor.motor[0].maksNettoEffekt * 1.36) : null,
@@ -196,6 +217,7 @@ Deno.serve(async (req) => {
       nextEuKontrollDeadline: pkk?.kontrollfrist || null,
       fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
       electricConsumption: forbruk?.elektriskEnergiforbruk || forbruk?.elektriskRekkeviddeKm || null,
+      batteryCapacityKwh,
       svvCode,
     };
 

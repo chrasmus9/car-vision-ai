@@ -10,23 +10,23 @@ interface AllInfoCardsProps {
   isElectric: boolean;
   electricConsumption?: number | null;
   fuelType?: string;
+  batteryCapacityKwh?: number | null;
   // Status cards
   lastEuKontroll: string | null;
   nextEuKontrollDeadline: string | null;
   mileage: string;
   year: number;
-  firstRegYear: string | null;
-  firstRegNorwayDate: string | null;
-  modelYear: number;
+  forstegangsGodkjenningDato: string | null;
+  registrertForstegangNorgeDato: string | null;
   regNr: string;
 }
 
 const AllInfoCards = (props: AllInfoCardsProps) => {
   const {
     towWeight, owners, maxSpeed, fuelConsumption, rekkevidde,
-    isElectric, electricConsumption, fuelType,
+    isElectric, electricConsumption, fuelType, batteryCapacityKwh,
     lastEuKontroll, nextEuKontrollDeadline,
-    mileage, year, firstRegYear, firstRegNorwayDate, modelYear, regNr,
+    mileage, year, forstegangsGodkjenningDato, registrertForstegangNorgeDato, regNr,
   } = props;
 
   const isDiesel = fuelType?.toLowerCase()?.includes("diesel") || false;
@@ -79,7 +79,17 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     return "Høyt forbruk";
   };
 
-  const consumptionValue = isElectric ? electricConsumption : fuelConsumption;
+  // EV consumption: use API value, or calculate from battery/range
+  let consumptionValue = isElectric ? electricConsumption : fuelConsumption;
+  let consumptionCalculated = false;
+  if (isElectric && consumptionValue == null && batteryCapacityKwh && rekkevidde) {
+    const rangeMatch = rekkevidde.match(/(\d+)\s*km/);
+    const wltpRangeKm = rangeMatch ? parseInt(rangeMatch[1]) : null;
+    if (wltpRangeKm && wltpRangeKm > 0) {
+      consumptionValue = Math.round((batteryCapacityKwh / wltpRangeKm) * 100 * 10) / 10;
+      consumptionCalculated = true;
+    }
+  }
   const consumptionUnit = isElectric ? "kWh/100km" : "l/100km";
   const consumptionDisplay = consumptionValue != null
     ? `${consumptionValue.toLocaleString("nb-NO", { minimumFractionDigits: isElectric ? 0 : 1, maximumFractionDigits: 1 })} ${consumptionUnit}`
@@ -107,7 +117,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
 
   // --- Km vs age ---
   const kmNum = parseInt(mileage?.replace(/\D/g, "") || "0");
-  const regYear = firstRegYear ? parseInt(firstRegYear.substring(0, 4)) : year;
+  const regYear = registrertForstegangNorgeDato ? parseInt(registrertForstegangNorgeDato.substring(0, 4)) : year;
   const currentYear = new Date().getFullYear();
   const years = Math.max(1, currentYear - regYear);
   const kmPerYear = Math.round(kmNum / years);
@@ -118,13 +128,24 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     return { color: "text-red-600 dark:text-red-400", label: "Høy" };
   };
 
-  // --- Import ---
-  const norwayYear = firstRegNorwayDate ? parseInt(firstRegNorwayDate.substring(0, 4)) : null;
-  const importDiff = norwayYear && modelYear ? norwayYear - modelYear : null;
+  // --- Import (Vegvesen-only) ---
   const getImportStatus = () => {
-    if (importDiff == null || !norwayYear || !modelYear) return { color: "text-muted-foreground", label: "Ukjent" };
-    if (importDiff >= 2) return { color: "text-red-600 dark:text-red-400", label: "Ja" };
-    return { color: "text-green-600 dark:text-green-400", label: "Nei" };
+    if (!forstegangsGodkjenningDato || !registrertForstegangNorgeDato) {
+      return { color: "text-muted-foreground", label: "—", detail: null };
+    }
+    const approvalDate = new Date(forstegangsGodkjenningDato);
+    const norwayDate = new Date(registrertForstegangNorgeDato);
+    const diffMonths = (norwayDate.getTime() - approvalDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+    const approvalYear = approvalDate.getFullYear();
+    const norwayYear = norwayDate.getFullYear();
+    if (diffMonths >= 12) {
+      return {
+        color: "text-red-600 dark:text-red-400",
+        label: "Ja",
+        detail: `Første godkjenning: ${approvalYear} · Reg. i Norge: ${norwayYear}`,
+      };
+    }
+    return { color: "text-green-600 dark:text-green-400", label: "Nei", detail: null };
   };
 
   const euStatus = getEuStatus();
@@ -167,7 +188,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
       <InfoCard
         icon={isElectric ? BatteryCharging : Fuel}
         label="Forbruk"
-        sublabel={getFuelSublabel(consumptionValue)}
+        sublabel={consumptionCalculated ? "(beregnet)" : getFuelSublabel(consumptionValue)}
         value={consumptionDisplay}
         valueColor={getFuelColor(consumptionValue)}
       />
@@ -210,13 +231,11 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
           <Globe className="w-4 h-4 text-muted-foreground" />
         </div>
         <p className={`text-sm font-semibold ${importStatus.color}`}>{importStatus.label}</p>
-        {norwayYear && modelYear ? (
-          <p className="text-[10px] text-muted-foreground leading-snug">
-            Første reg. i Norge: {norwayYear} · Årsmodell: {modelYear}
-          </p>
-        ) : (
+        {importStatus.detail ? (
+          <p className="text-[10px] text-muted-foreground leading-snug">{importStatus.detail}</p>
+        ) : importStatus.label === "—" ? (
           <p className="text-[10px] text-muted-foreground">Mangler data</p>
-        )}
+        ) : null}
       </div>
 
       <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-2 min-w-[180px] flex-1 basis-[180px]">
