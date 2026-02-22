@@ -12,8 +12,8 @@ interface AllInfoCardsProps {
   nextEuKontrollDeadline: string | null;
   mileage: string;
   year: number;
-  forstegangsGodkjenningDato: string | null;
   registrertForstegangNorgeDato: string | null;
+  bruktimportert?: boolean | string | null;
   regNr: string;
 }
 
@@ -22,7 +22,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     towWeight, owners, maxSpeed, rekkevidde,
     isElectric, power,
     lastEuKontroll, nextEuKontrollDeadline,
-    mileage, year, forstegangsGodkjenningDato, registrertForstegangNorgeDato, regNr,
+    mileage, year, registrertForstegangNorgeDato, bruktimportert, regNr,
   } = props;
 
   // --- Rekkevidde ---
@@ -66,20 +66,14 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
 
   // --- Import ---
   const getImportStatus = () => {
-    if (!forstegangsGodkjenningDato || !registrertForstegangNorgeDato) {
-      return { color: "text-muted-foreground", label: "—", detail: null };
+    if (bruktimportert === null || bruktimportert === undefined) {
+      return { color: "text-muted-foreground", label: "—" };
     }
-    const approvalDate = new Date(forstegangsGodkjenningDato);
-    const norwayDate = new Date(registrertForstegangNorgeDato);
-    const diffMonths = (norwayDate.getTime() - approvalDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
-    if (diffMonths >= 12) {
-      return {
-        color: "text-red-600 dark:text-red-400",
-        label: "Ja",
-        detail: `Første godkjenning: ${approvalDate.getFullYear()} · Reg. i Norge: ${norwayDate.getFullYear()}`,
-      };
+    const isImported = bruktimportert === true || bruktimportert === "Ja";
+    if (isImported) {
+      return { color: "text-red-600 dark:text-red-400", label: "Ja" };
     }
-    return { color: "text-green-600 dark:text-green-400", label: "Nei", detail: null };
+    return { color: "text-green-600 dark:text-green-400", label: "Nei" };
   };
 
   const euStatus = getEuStatus();
@@ -108,9 +102,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
       {maxSpeed != null && (
         <InfoCard icon={Gauge} label="Maks hastighet" value={`${Array.isArray(maxSpeed) ? maxSpeed[0] : maxSpeed} km/t`} />
       )}
-      {isElectric && rkkValue && (
-        <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={`${rkkValue} km`} />
-      )}
+      <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={rkkValue ? `${rkkValue} km` : "—"} />
       {powerValue && (
         <InfoCard icon={Gauge} label="Hestekrefter" value={`${powerValue} hk`} />
       )}
@@ -141,7 +133,6 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
         label="Bruktimportert"
         value={importStatus.label}
         valueColor={importStatus.color}
-        sublabel={importStatus.detail || undefined}
       />
 
       <div className="bg-card rounded-xl border border-border card-shadow p-4 flex items-center gap-3 min-w-[180px] flex-1 basis-[180px] h-24">

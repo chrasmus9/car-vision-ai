@@ -351,8 +351,8 @@ const Analysis = () => {
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
           year={carData.year}
-          forstegangsGodkjenningDato={vegvesenData?.forstegangsGodkjenningDato}
           registrertForstegangNorgeDato={vegvesenData?.registrertForstegangNorgeDato}
+          bruktimportert={vegvesenData?.bruktimportert}
           regNr={carData.regNr}
         />
 
