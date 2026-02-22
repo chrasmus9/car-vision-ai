@@ -65,6 +65,9 @@ Deno.serve(async (req) => {
         finnCode: String(doc.id || doc.ad_id || ''),
         url: doc.canonical_url || `https://www.finn.no/mobility/item/${doc.id}`,
         location: doc.location || '',
+        gearbox: doc.transmission || '',
+        drivetrain: doc.wheel_drive || '',
+        variant: doc.body_type || doc.trim || '',
       }));
 
     console.log(`Found ${listings.length} similar listings`);

@@ -6,6 +6,7 @@ import CarOverview from "@/components/analysis/CarOverview";
 import RiskAssessment from "@/components/analysis/RiskAssessment";
 import PriceAnalysis from "@/components/analysis/PriceAnalysis";
 import SimilarListings from "@/components/analysis/SimilarListings";
+import EuKontrollSection from "@/components/analysis/EuKontrollSection";
 import SpecsGrid from "@/components/analysis/SpecsGrid";
 import EquipmentList from "@/components/analysis/EquipmentList";
 import AISummary from "@/components/analysis/AISummary";
@@ -64,6 +65,7 @@ const Analysis = () => {
   const [similarListings, setSimilarListings] = useState<any[]>([]);
   const [priceStats, setPriceStats] = useState<any>(null);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [vegvesenData, setVegvesenData] = useState<any>(null);
 
   useEffect(() => {
     if (!url) {
@@ -117,12 +119,28 @@ const Analysis = () => {
 
         setCarData(car);
 
-        // Step 2: AI Analysis + Search similar in parallel
+        // Step 2: Vegvesen lookup (if regNr available)
+        let vegvesen = null;
+        if (car.regNr) {
+          try {
+            const { data: vResult } = await supabase.functions.invoke("vegvesen-lookup", {
+              body: { regNr: car.regNr },
+            });
+            if (vResult?.success) {
+              vegvesen = vResult.data;
+              setVegvesenData(vegvesen);
+            }
+          } catch (e) {
+            console.warn("Vegvesen lookup failed:", e);
+          }
+        }
+
+        // Step 3: AI Analysis + Search similar in parallel
         setLoadingStep("analyzing");
         
         const [aiResponse, searchResponse] = await Promise.all([
           supabase.functions.invoke("analyze-car", {
-            body: { carData: { ...car, textContent: raw.textContent } },
+            body: { carData: { ...car, textContent: raw.textContent }, vegvesenData: vegvesen },
           }),
           supabase.functions.invoke("search-finn", {
             body: {
@@ -235,7 +253,13 @@ const Analysis = () => {
               isLoadingSimilar={isLoadingSimilar}
             />
           )}
-          {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+          <div className="space-y-6">
+            {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+            <EuKontrollSection
+              lastDate={vegvesenData?.lastEuKontroll}
+              nextDeadline={vegvesenData?.nextEuKontrollDeadline}
+            />
+          </div>
         </div>
 
         {/* Similar listings — full width card grid */}
