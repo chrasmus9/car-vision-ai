@@ -50,6 +50,20 @@ Deno.serve(async (req) => {
     const docs = data.docs || [];
 
     const modelLower = model.toLowerCase();
+
+    // Debug: log fields for variant/drivetrain extraction
+    if (docs.length > 0) {
+      docs.slice(0, 3).forEach((d: any, i: number) => {
+        console.log(`Doc ${i}:`, JSON.stringify({
+          heading: d.heading,
+          model_specification: d.model_specification,
+          extras: d.extras,
+          facade_title: d.facade_title,
+          labels: d.labels,
+        }));
+      });
+    }
+
     const listings = docs
       .filter((doc: any) => {
         const docModel = (doc.model || '').toLowerCase();
@@ -58,26 +72,65 @@ Deno.serve(async (req) => {
       .slice(0, 15)
       .map((doc: any) => {
         const heading = doc.heading || `${make} ${model}`;
+        const modelSpec = doc.model_specification || '';
+        const facadeTitle = doc.facade_title || '';
+        const makeModel = `${make} ${model}`.trim();
+        const makeModelLower = makeModel.toLowerCase();
         
-        // Extract variant from title by removing make/model prefix
-        const makeModel = `${make} ${model}`.trim().toLowerCase();
-        let variant = '';
-        const headingLower = heading.toLowerCase();
-        if (headingLower.startsWith(makeModel)) {
-          variant = heading.substring(makeModel.length).trim();
-          // Clean up leading/trailing punctuation
-          variant = variant.replace(/^[\s,\-–]+/, '').trim();
-        }
-        if (!variant) variant = doc.body_type || doc.trim || '';
+        // Helper: strip make/model prefix from a string
+        const stripPrefix = (s: string) => {
+          const lower = s.toLowerCase();
+          if (lower.startsWith(makeModelLower)) {
+            return s.substring(makeModel.length).trim().replace(/^[\s,\-–]+/, '').trim();
+          }
+          return s.trim();
+        };
 
-        // Extract drivetrain from title
+        // 1. Variant: prefer model_specification subtitle, cleaned up
+        let variant = '';
+        if (modelSpec) {
+          let cleaned = stripPrefix(modelSpec);
+          // Remove everything after | (pipe separator)
+          cleaned = cleaned.split(/\s*\|\s*/)[0].trim();
+          // Split on / and keep only the first segment if it looks like equipment list
+          const slashParts = cleaned.split(/\s*\/\s*/);
+          if (slashParts.length > 2) {
+            // Multiple / segments = equipment list, keep first meaningful part
+            cleaned = slashParts[0].trim();
+          }
+          // Remove common equipment suffixes
+          cleaned = cleaned.replace(/\b(hengerfeste|tilhengerfeste|krok|kamera\d*|soltak|acc|ledbar|skinn|harman|pixel|ryggelys|oppvarm|varmepumpe|ekstra|kam)\b.*$/i, '').trim();
+          // Remove seller comments after ! (e.g. "Long Range ! Velholdt! Freshe dekk!")
+          cleaned = cleaned.replace(/\s*!.*$/g, '').trim();
+          cleaned = cleaned.replace(/[!+*\/\-–]+$/g, '').trim();
+          // Remove specs like "283hk", "EU-07.2027", range info
+          cleaned = cleaned.replace(/\b\d+hk\b/gi, '').trim();
+          cleaned = cleaned.replace(/\bEU-\d{2}\.\d{4}\b/gi, '').trim();
+          cleaned = cleaned.replace(/\b(OVER\s+)?\d+\s*KM\s+REKKEVIDDE\b/gi, '').trim();
+          cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+          if (cleaned.length > 1) variant = cleaned;
+        }
+        if (!variant) {
+          const fromTitle = stripPrefix(heading);
+          if (fromTitle.length > 1) variant = fromTitle;
+        }
+
+        // 2. Drivetrain: check model_specification and title for keywords
         let drivetrain = '';
-        if (/\b(AWD|4WD|xDrive|4x4|Firehjulsdrift|4MATIC|quattro|4motion|allgrip|e-4orce)\b/i.test(heading)) {
+        const searchText = `${modelSpec} ${heading} ${facadeTitle}`;
+        
+        if (/\b(AWD|4WD|xDrive|4x4|Firehjulsdrift|Firehjulstrekk|4MATIC|quattro|4motion|allgrip|e-4orce|Twin)\b/i.test(searchText)) {
           drivetrain = 'Firehjulsdrift';
-        } else if (/\b(RWD|Tohjulsdrift|Bakhjulsdrift|FWD|Forhjulsdrift)\b/i.test(heading)) {
+        } else if (/\b(RWD|FWD|Tohjulsdrift|Bakhjulsdrift|Forhjulsdrift)\b/i.test(searchText)) {
           drivetrain = 'Tohjulsdrift';
         } else {
           drivetrain = doc.wheel_drive || '';
+        }
+
+        // Clean drivetrain keywords from variant
+        if (variant) {
+          variant = variant.replace(/\b(AWD|4WD|xDrive|4x4|4MATIC|quattro|4motion|allgrip|e-4orce|RWD|FWD|Twin)\b/gi, '').trim();
+          variant = variant.replace(/\s{2,}/g, ' ').trim();
         }
 
         return {
@@ -94,26 +147,6 @@ Deno.serve(async (req) => {
           variant,
         };
       });
-
-    console.log(`Found ${listings.length} similar listings`);
-    // Debug: log raw doc keys to find drivetrain field
-    if (docs.length > 0) {
-      const sample = docs[0];
-      console.log('Sample doc keys:', Object.keys(sample).join(', '));
-      console.log('Seller fields:', JSON.stringify({
-        dealer_segment: sample.dealer_segment,
-        organisation_name: sample.organisation_name,
-        ad_type: sample.ad_type,
-        sales_form: sample.sales_form,
-        dealer_group_id: sample.dealer_group_id,
-      }));
-      // Log a few docs to see variation
-      docs.slice(0, 5).forEach((d: any, i: number) => {
-        console.log(`Doc ${i} seller:`, JSON.stringify({
-          ds: d.dealer_segment, org: d.organisation_name, ad: d.ad_type, sf: d.sales_form
-        }));
-      });
-    }
 
     // Calculate stats
     const prices = listings.map((l: any) => l.price).filter((p: number) => p > 0);
