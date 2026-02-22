@@ -69,7 +69,9 @@ Gi svaret som JSON med følgende struktur:
 }
 
 Inkluder 4-6 risikoer (minst 1 høy, 1 middels, 1 lav) med kategori og spørsmål for hver.
-${vegvesenData ? 'Inkluder ALLE avvik mellom Finn-data og Vegvesen-data som separate risikoer med category "Avvik".' : ''}
+${vegvesenData ? `Inkluder avvik mellom Finn-data og Vegvesen-data som separate risikoer med category "Avvik", MEN med følgende unntak:
+- Modellår: Biler produsert sent på året markedsføres ofte som neste års modell. IKKE flagg avvik i modellår hvis forskjellen mellom annonsert årsmodell og førstegangsregistreringsår er 18 måneder eller mindre. Kun flagg hvis forskjellen er MER enn 18 måneder.
+- Hestekrefter (HK/motoreffekt): Hvis Vegvesen returnerer null/manglende verdi for motoreffekt, IKKE flagg dette som avvik — det betyr bare at dataen ikke er registrert i SVV-registeret. Kun flagg HK-avvik hvis Vegvesen har en faktisk numerisk verdi som avviker med mer enn 10 hk fra Finn-annonsen.` : ''}
 Inkluder 3-5 positive høydepunkter.
 Inkluder ALLE kjente tilbakekallinger (recalls) for denne SPESIFIKKE bilmodellen, årsmodellen OG varianten (f.eks. EV, PHEV, hybrid, diesel, bensin). Ikke bland tilbakekallinger fra andre varianter. Hvis bilen er en elbil, inkluder KUN tilbakekallinger som gjelder elbil-varianten. Inkluder både aktive og utløpte/fullførte tilbakekallinger. Det er INGEN grense på antall — returner alle du kjenner til. Hvis du ikke kjenner til noen, returner en tom liste.
 Svar KUN med JSON, ingen annen tekst.`;

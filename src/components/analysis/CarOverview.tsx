@@ -175,10 +175,10 @@ const CarOverview = ({ car }: CarOverviewProps) => {
               </div>
             ) : null;
           })()}
-          {!car.isElectric && (
+          {!car.isElectric && car.consumption && (
             <div>
               <p className="text-xs text-muted-foreground">Forbruk</p>
-              <p className="text-sm font-semibold text-foreground">{car.consumption ? `${car.consumption} l/100km` : "—"}</p>
+              <p className="text-sm font-semibold text-foreground">{car.consumption} l/100km</p>
             </div>
           )}
           {car.location && (
