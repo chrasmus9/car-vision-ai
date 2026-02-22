@@ -193,7 +193,7 @@ const Analysis = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <AnalysisLoading step={loadingStep} carData={carData} />
+        <AnalysisLoading />
         <Footer />
       </div>
     );
