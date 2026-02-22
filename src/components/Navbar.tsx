@@ -1,8 +1,12 @@
 import { Car, Plus, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "./AuthProvider";
+import ProfileDropdown from "./ProfileDropdown";
 
 const Navbar = () => {
+  const { user, setShowAuthModal } = useAuth();
+
   return (
     <nav className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
@@ -21,10 +25,14 @@ const Navbar = () => {
               Ny analyse
             </Button>
           </Link>
-          <Button variant="outline" size="sm" className="gap-2">
-            <User className="w-4 h-4" />
-            Logg inn
-          </Button>
+          {user ? (
+            <ProfileDropdown />
+          ) : (
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowAuthModal(true)}>
+              <User className="w-4 h-4" />
+              Logg inn
+            </Button>
+          )}
         </div>
       </div>
     </nav>

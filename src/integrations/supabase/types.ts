@@ -24,6 +24,7 @@ export type Database = {
           id: string
           price_stats: Json | null
           similar_listings: Json | null
+          user_id: string | null
           vegvesen_data: Json | null
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           id?: string
           price_stats?: Json | null
           similar_listings?: Json | null
+          user_id?: string | null
           vegvesen_data?: Json | null
         }
         Update: {
@@ -46,7 +48,62 @@ export type Database = {
           id?: string
           price_stats?: Json | null
           similar_listings?: Json | null
+          user_id?: string | null
           vegvesen_data?: Json | null
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          car_data: Json
+          created_at: string
+          finn_code: string
+          finn_url: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          car_data?: Json
+          created_at?: string
+          finn_code: string
+          finn_url?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          car_data?: Json
+          created_at?: string
+          finn_code?: string
+          finn_url?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

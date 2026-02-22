@@ -13,6 +13,7 @@ import AISummary from "@/components/analysis/AISummary";
 import RecallsSection from "@/components/analysis/RecallsSection";
 import AnalysisLoading from "@/components/analysis/AnalysisLoading";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 
 export interface CarData {
@@ -58,6 +59,7 @@ const Analysis = () => {
   const [searchParams] = useSearchParams();
   const url = searchParams.get("url") || "";
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState<"scraping" | "analyzing">("scraping");
@@ -261,6 +263,7 @@ const Analysis = () => {
           vegvesen_data: vegvesen,
           similar_listings: filteredListings,
           price_stats: searchResult?.data?.stats || null,
+          user_id: user?.id || null,
         } as any, { onConflict: "finn_code" });
 
       } catch (err: any) {
