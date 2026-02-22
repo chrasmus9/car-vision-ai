@@ -1,4 +1,4 @@
-import { Users, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
+import { Users, Car, Globe, FileWarning, Shield, ShieldCheck, Wrench, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
 
 interface AllInfoCardsProps {
   owners?: number | null;
@@ -9,6 +9,8 @@ interface AllInfoCardsProps {
   registrertForstegangNorgeDato: string | null;
   bruktimportert?: boolean | string | null;
   regNr: string;
+  garanti?: string | null;
+  servicehistorikk?: string | null;
 }
 
 const AllInfoCards = (props: AllInfoCardsProps) => {
@@ -16,6 +18,7 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
     owners,
     lastEuKontroll, nextEuKontrollDeadline,
     mileage, year, registrertForstegangNorgeDato, bruktimportert, regNr,
+    garanti, servicehistorikk,
   } = props;
 
   // --- EU-kontroll ---
@@ -106,6 +109,24 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
         value={importStatus.label}
         valueColor={importStatus.color}
       />
+
+      {garanti && (
+        <InfoCard
+          icon={ShieldCheck}
+          label="Garanti"
+          value={garanti}
+          valueColor="text-green-600 dark:text-green-400"
+        />
+      )}
+
+      {servicehistorikk && (
+        <InfoCard
+          icon={Wrench}
+          label="Servicehistorikk"
+          value={servicehistorikk}
+          valueColor="text-green-600 dark:text-green-400"
+        />
+      )}
 
       {regNr && (
         <div className="bg-card rounded-xl border border-border card-shadow p-4 flex items-center gap-3 min-w-[180px] flex-1 basis-[180px] h-24">

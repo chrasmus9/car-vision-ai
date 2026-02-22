@@ -8,11 +8,11 @@ const tips = [
 ];
 
 const statusTexts: [number, string][] = [
-  [0, "Henter annonsedata fra Finn..."],
-  [15, "Sjekker kjøretøydata fra Vegvesen..."],
-  [40, "Analyserer bilen med AI... dette tar litt tid"],
-  [85, "Fullfører analysen..."],
-  [100, "Ferdig!"],
+  [0, "Finner annonsen på Finn... 🔍"],
+  [15, "Sjekker kjøretøyhistorikk hos Vegvesen... 🏛️"],
+  [45, "AI-en analyserer bilen nøye... dette er den viktige delen ⚡"],
+  [90, "Setter sammen rapporten din... nesten klar! 🎯"],
+  [100, "Analysen er klar! 🚗✅"],
 ];
 
 const getStatusText = (pct: number) => {
@@ -38,9 +38,9 @@ const AnalysisLoading = ({ loadingStep = "scraping", fromCache = false }: Analys
     if (fromCache) return;
 
     const targets: Record<string, number> = {
-      scraping: 40,
-      vegvesen: 65,
-      analyzing: 85,
+      scraping: 45,
+      vegvesen: 70,
+      analyzing: 90,
       finalizing: 95,
       done: 100,
     };
