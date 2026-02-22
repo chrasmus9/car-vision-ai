@@ -347,15 +347,14 @@ const Analysis = () => {
           isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
           electricConsumption={vegvesenData?.electricConsumption}
           fuelType={carData.fuel}
+          batteryCapacityKwh={vegvesenData?.batteryCapacityKwh}
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
           year={carData.year}
-          firstRegYear={vegvesenData?.firstRegistration}
-          firstRegNorwayDate={vegvesenData?.firstRegistration}
-          modelYear={carData.year}
+          forstegangsGodkjenningDato={vegvesenData?.forstegangsGodkjenningDato}
+          registrertForstegangNorgeDato={vegvesenData?.registrertForstegangNorgeDato}
           regNr={carData.regNr}
-          
         />
 
         {/* Høydepunkter + Risikoer */}

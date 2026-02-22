@@ -222,6 +222,32 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fallback: search description text for owner patterns like "1-eier", "én eier", "2 eiere"
+    if (!(carData as any).owners) {
+      const descText = (description || '') + ' ' + textContent;
+      const ownerPatterns = [
+        /(\d)\s*-?\s*eiere?/i,
+        /én\s+eier/i,
+        /èn\s+eier/i,
+      ];
+      for (const pat of ownerPatterns) {
+        const m = descText.match(pat);
+        if (m) {
+          if (m[1]) {
+            const val = parseInt(m[1]);
+            if (val >= 1 && val <= 10) {
+              (carData as any).owners = val;
+              break;
+            }
+          } else {
+            // "én eier" / "èn eier" → 1
+            (carData as any).owners = 1;
+            break;
+          }
+        }
+      }
+    }
+
     // Extract Rekkevidde (WLTP) for electric cars
     const rekkeviddSpec = extractSpec('Rekkevidde');
     if (rekkeviddSpec) {
