@@ -12,6 +12,7 @@ interface Risk {
 interface RiskAssessmentProps {
   risks: Risk[];
   highlights?: string[];
+  highlightsFirst?: boolean;
 }
 
 const levelConfig = {
@@ -50,13 +51,28 @@ const getHighlightEmoji = (text: string): string => {
   return "⭐";
 };
 
-const RiskAssessment = ({ risks, highlights }: RiskAssessmentProps) => {
+const RiskAssessment = ({ risks, highlights, highlightsFirst }: RiskAssessmentProps) => {
   const highCount = risks.filter(r => r.level === "high").length;
   const medCount = risks.filter(r => r.level === "medium").length;
   const lowCount = risks.filter(r => r.level === "low").length;
 
   return (
     <div className="space-y-8">
+      {/* Highlights badges */}
+      {highlightsFirst && highlights && highlights.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Høydepunkter</h3>
+          <div className="flex flex-wrap gap-2">
+            {highlights.map((h, i) => (
+              <Badge key={i} variant="outline" className="gap-2 px-3 py-1.5">
+                <span className="text-sm">{getHighlightEmoji(h)}</span>
+                {h}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Risk badges */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-muted-foreground">Risikoer</h3>
@@ -79,8 +95,8 @@ const RiskAssessment = ({ risks, highlights }: RiskAssessmentProps) => {
         </div>
       </div>
 
-      {/* Highlights badges */}
-      {highlights && highlights.length > 0 && (
+      {/* Highlights badges (when not first) */}
+      {!highlightsFirst && highlights && highlights.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">Høydepunkter</h3>
           <div className="flex flex-wrap gap-2">

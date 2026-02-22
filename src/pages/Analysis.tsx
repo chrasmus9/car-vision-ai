@@ -327,7 +327,7 @@ const Analysis = () => {
 
         {analysis && <AISummary summary={analysis.summary} />}
 
-        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
+        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} highlightsFirst />}
 
         {/* ROW 1: Key metrics */}
         <KeyMetricsRow

@@ -158,8 +158,8 @@ const ImportCard = ({ firstRegNorwayDate, modelYear }: { firstRegNorwayDate: str
 // --- Heftelser card ---
 const HeftelserCard = ({ regNr }: { regNr: string }) => {
   const url = regNr
-    ? `https://www.brreg.no/heftelser/?regnr=${encodeURIComponent(regNr)}`
-    : "https://www.brreg.no/heftelser";
+    ? `https://rettsstiftelser.brreg.no/nb/oppslag/motorvogn/${encodeURIComponent(regNr)}`
+    : "https://rettsstiftelser.brreg.no/nb/oppslag/motorvogn";
 
   return (
     <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-2">
