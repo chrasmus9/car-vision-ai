@@ -1,11 +1,7 @@
-import { Users, Zap, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, Fuel } from "lucide-react";
+import { Users, Car, Globe, FileWarning, Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
 
 interface AllInfoCardsProps {
   owners?: number | null;
-  rekkevidde?: string | null;
-  isElectric: boolean;
-  isHybrid?: boolean;
-  hybridKategori?: string | null;
   lastEuKontroll: string | null;
   nextEuKontrollDeadline: string | null;
   mileage: string;
@@ -13,53 +9,16 @@ interface AllInfoCardsProps {
   registrertForstegangNorgeDato: string | null;
   bruktimportert?: boolean | string | null;
   regNr: string;
-  fuel?: string | null;
-  consumption?: string | null;
 }
 
 const AllInfoCards = (props: AllInfoCardsProps) => {
   const {
-    owners, rekkevidde,
-    isElectric, isHybrid, hybridKategori,
+    owners,
     lastEuKontroll, nextEuKontrollDeadline,
     mileage, year, registrertForstegangNorgeDato, bruktimportert, regNr,
-    fuel, consumption,
   } = props;
 
-  // Determine which cards to show
-  const showWLTP = isElectric || (isHybrid && hybridKategori === "LADBAR");
-  const showForbruk = !isElectric && (!isHybrid || hybridKategori !== undefined);
-  // For non-ladbar hybrid, hide WLTP
-  const showForbrukOnly = !isElectric && (!isHybrid || hybridKategori === "IKKE_LADBAR" || (!hybridKategori && !isElectric));
-
-  // --- Rekkevidde ---
-  const rkkMatches = rekkevidde ? [...rekkevidde.matchAll(/(\d+)\s*km/gi)] : [];
-  const rkkValue = rkkMatches.length > 0 ? rkkMatches[rkkMatches.length - 1][1] : null;
-
-  // --- Consumption ---
-  const getConsumptionInfo = () => {
-    if (!consumption) return null;
-    const match = consumption.match(/([\d,.]+)/);
-    if (!match) return null;
-    const val = parseFloat(match[1].replace(',', '.'));
-    if (isNaN(val)) return null;
-
-    const isDiesel = fuel?.toLowerCase()?.includes('diesel');
-    let color = "text-foreground";
-    if (isDiesel) {
-      if (val < 5) color = "text-green-600 dark:text-green-400";
-      else if (val <= 7) color = "text-yellow-600 dark:text-yellow-400";
-      else color = "text-red-600 dark:text-red-400";
-    } else {
-      if (val < 6) color = "text-green-600 dark:text-green-400";
-      else if (val <= 9) color = "text-yellow-600 dark:text-yellow-400";
-      else color = "text-red-600 dark:text-red-400";
-    }
-    const display = String(val).replace('.', ',');
-    return { value: `${display} l/100km`, color };
-  };
-
-  const consumptionInfo = getConsumptionInfo();
+  // --- EU-kontroll ---
 
   // --- EU-kontroll ---
   const getEuStatus = () => {
@@ -120,15 +79,6 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
         />
       )}
 
-      {/* WLTP for electric + ladbar hybrid */}
-      {showWLTP && (
-        <InfoCard icon={Zap} label="Rekkevidde (WLTP)" value={rkkValue ? `${rkkValue} km` : "—"} />
-      )}
-
-      {/* Forbruk for non-electric (always visible), also for ladbar hybrid */}
-      {(showForbrukOnly || (isHybrid && hybridKategori === "LADBAR")) && (
-        <InfoCard icon={Fuel} label="Forbruk" value={consumptionInfo?.value || "—"} valueColor={consumptionInfo?.color} />
-      )}
 
       <InfoCard
         icon={EuIcon}
@@ -157,22 +107,24 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
         valueColor={importStatus.color}
       />
 
-      <div className="bg-card rounded-xl border border-border card-shadow p-4 flex items-center gap-3 min-w-[180px] flex-1 basis-[180px] h-24">
-        <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-          <FileWarning className="w-4 h-4 text-muted-foreground" />
+      {regNr && (
+        <div className="bg-card rounded-xl border border-border card-shadow p-4 flex items-center gap-3 min-w-[180px] flex-1 basis-[180px] h-24">
+          <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <FileWarning className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground leading-tight">Økonomiske heftelser</p>
+            <a
+              href={`https://rettsstiftelser.brreg.no/nb/oppslag/motorvogn/${encodeURIComponent(regNr)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+            >
+              Sjekk heftelser <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground leading-tight">Økonomiske heftelser</p>
-          <a
-            href={heftelserUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-          >
-            Sjekk heftelser <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

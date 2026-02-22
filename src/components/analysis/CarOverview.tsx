@@ -22,6 +22,11 @@ interface CarOverviewProps {
     maxTowingWeight?: string | null;
     topSpeed?: string | null;
     horsepower?: string | null;
+    rekkevidde?: string | null;
+    consumption?: string | null;
+    isElectric?: boolean;
+    isHybrid?: boolean;
+    hybridKategori?: string | null;
   };
 }
 
@@ -124,32 +129,22 @@ const CarOverview = ({ car }: CarOverviewProps) => {
 
         {/* Quick specs row */}
         <div className="flex flex-wrap gap-x-8 gap-y-2 pt-2 border-t border-border">
-          <div>
-            <p className="text-xs text-muted-foreground">Modellår</p>
-            <p className="text-sm font-semibold text-foreground">{car.year}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Kilometerstand</p>
-            <p className="text-sm font-semibold text-foreground">{car.mileage}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Drivstoff</p>
-            <p className="text-sm font-semibold text-foreground">{car.fuel}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Girkasse</p>
-            <p className="text-sm font-semibold text-foreground">{car.gearbox}</p>
-          </div>
-        {car.location && (
+          {car.year && (
             <div>
-              <p className="text-xs text-muted-foreground">Sted</p>
-              <p className="text-sm font-semibold text-foreground">{car.location}</p>
+              <p className="text-xs text-muted-foreground">Modellår</p>
+              <p className="text-sm font-semibold text-foreground">{car.year}</p>
             </div>
           )}
-          {car.maxTowingWeight && (
+          {car.mileage && (
             <div>
-              <p className="text-xs text-muted-foreground">Maks tilhengervekt</p>
-              <p className="text-sm font-semibold text-foreground">{car.maxTowingWeight}</p>
+              <p className="text-xs text-muted-foreground">Kilometerstand</p>
+              <p className="text-sm font-semibold text-foreground">{car.mileage}</p>
+            </div>
+          )}
+          {car.horsepower && (
+            <div>
+              <p className="text-xs text-muted-foreground">Hestekrefter</p>
+              <p className="text-sm font-semibold text-foreground">{car.horsepower}</p>
             </div>
           )}
           {car.topSpeed && (
@@ -158,10 +153,38 @@ const CarOverview = ({ car }: CarOverviewProps) => {
               <p className="text-sm font-semibold text-foreground">{car.topSpeed}</p>
             </div>
           )}
-          {car.horsepower && (
+          {car.fuel && (
             <div>
-              <p className="text-xs text-muted-foreground">Hestekrefter</p>
-              <p className="text-sm font-semibold text-foreground">{car.horsepower}</p>
+              <p className="text-xs text-muted-foreground">Drivstoff</p>
+              <p className="text-sm font-semibold text-foreground">{car.fuel}</p>
+            </div>
+          )}
+          {car.maxTowingWeight && (
+            <div>
+              <p className="text-xs text-muted-foreground">Maks tilhengervekt</p>
+              <p className="text-sm font-semibold text-foreground">{car.maxTowingWeight}</p>
+            </div>
+          )}
+          {(car.isElectric || (car.isHybrid && car.hybridKategori === "LADBAR")) && car.rekkevidde && (() => {
+            const matches = [...car.rekkevidde!.matchAll(/(\d+)\s*km/gi)];
+            const val = matches.length > 0 ? matches[matches.length - 1][1] : null;
+            return val ? (
+              <div>
+                <p className="text-xs text-muted-foreground">Rekkevidde (WLTP)</p>
+                <p className="text-sm font-semibold text-foreground">{val} km</p>
+              </div>
+            ) : null;
+          })()}
+          {!car.isElectric && (
+            <div>
+              <p className="text-xs text-muted-foreground">Forbruk</p>
+              <p className="text-sm font-semibold text-foreground">{car.consumption ? `${car.consumption} l/100km` : "—"}</p>
+            </div>
+          )}
+          {car.location && (
+            <div>
+              <p className="text-xs text-muted-foreground">Sted</p>
+              <p className="text-sm font-semibold text-foreground">{car.location}</p>
             </div>
           )}
         </div>
