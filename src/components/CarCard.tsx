@@ -43,20 +43,24 @@ const CarCard = ({ image, title, price, year, mileage, fuel, location, timeAgo, 
       return;
     }
     if (!finnCode || loading) return;
+    const wasFavorite = isFavorite;
+    setIsFavorite(!wasFavorite);
     setLoading(true);
     try {
-      if (isFavorite) {
-        await supabase.from("favorites").delete().eq("user_id", user.id).eq("finn_code", finnCode);
-        setIsFavorite(false);
+      if (wasFavorite) {
+        const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("finn_code", finnCode);
+        if (error) throw error;
       } else {
-        await supabase.from("favorites").insert({
+        const { error } = await supabase.from("favorites").insert({
           user_id: user.id,
           finn_code: finnCode,
           finn_url: finnUrl || null,
           car_data: carData || { title, price, year, mileage, fuel, location, imageUrl: image },
         });
-        setIsFavorite(true);
+        if (error) throw error;
       }
+    } catch {
+      setIsFavorite(wasFavorite);
     } finally {
       setLoading(false);
     }
