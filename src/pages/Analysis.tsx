@@ -6,8 +6,8 @@ import CarOverview from "@/components/analysis/CarOverview";
 import RiskAssessment from "@/components/analysis/RiskAssessment";
 import PriceAnalysis from "@/components/analysis/PriceAnalysis";
 import SimilarListings from "@/components/analysis/SimilarListings";
-import EuKontrollSection from "@/components/analysis/EuKontrollSection";
-import InfoCards from "@/components/analysis/InfoCards";
+import KeyMetricsRow from "@/components/analysis/KeyMetricsRow";
+import StatusCardsRow from "@/components/analysis/StatusCardsRow";
 import AISummary from "@/components/analysis/AISummary";
 import RecallsSection from "@/components/analysis/RecallsSection";
 import AnalysisLoading from "@/components/analysis/AnalysisLoading";
@@ -42,6 +42,7 @@ export interface CarData {
   euExpiry: string;
   equipment: string[];
   owners?: number;
+  rekkevidde?: string;
 }
 
 export interface AnalysisData {
@@ -154,6 +155,7 @@ const Analysis = () => {
           euExpiry: "",
           equipment: raw.equipment || [],
           owners: raw.owners || undefined,
+          rekkevidde: raw.rekkevidde || undefined,
         };
 
         setCarData(car);
@@ -325,6 +327,17 @@ const Analysis = () => {
 
         {analysis && <AISummary summary={analysis.summary} />}
 
+        {/* ROW 1: Key metrics */}
+        <KeyMetricsRow
+          towWeight={vegvesenData?.towWeight}
+          owners={carData.owners}
+          maxSpeed={vegvesenData?.maxSpeed}
+          fuelConsumption={vegvesenData?.fuelConsumption}
+          rekkevidde={carData.rekkevidde}
+          isElectric={carData.fuel?.toLowerCase()?.includes('elektr') || carData.fuel?.toLowerCase()?.includes('el') || false}
+        />
+
+        {/* ROW 2: Price + Recalls */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {priceNum > 0 && (
             <PriceAnalysis
@@ -334,24 +347,22 @@ const Analysis = () => {
               isLoadingSimilar={isLoadingSimilar}
             />
           )}
-          <div className="lg:col-span-2 space-y-4">
-            <InfoCards
-              towWeight={vegvesenData?.towWeight}
-              owners={carData.owners}
-              maxSpeed={vegvesenData?.maxSpeed}
-              fuelConsumption={vegvesenData?.fuelConsumption}
-              electricConsumption={vegvesenData?.electricConsumption}
-              fuelType={carData.fuel}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {analysis && <RecallsSection recalls={analysis.recalls || []} />}
-              <EuKontrollSection
-                lastDate={vegvesenData?.lastEuKontroll}
-                nextDeadline={vegvesenData?.nextEuKontrollDeadline}
-              />
-            </div>
+          <div className={priceNum > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
+            {analysis && <RecallsSection recalls={analysis.recalls || []} />}
           </div>
         </div>
+
+        {/* ROW 3: Status cards */}
+        <StatusCardsRow
+          lastEuKontroll={vegvesenData?.lastEuKontroll}
+          nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
+          mileage={carData.mileage}
+          year={carData.year}
+          firstRegYear={vegvesenData?.firstRegistration}
+          firstRegNorwayDate={vegvesenData?.firstRegistration}
+          modelYear={carData.year}
+          regNr={carData.regNr}
+        />
 
         {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
 

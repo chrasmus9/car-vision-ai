@@ -211,10 +211,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Extract number of owners
-    const ownersMatch = html.match(/(\d+)\s*eiere?/i) || textContent.match(/(\d+)\s*eiere?/i);
+    // Extract number of owners — must be a small integer (1-10), not a year
+    const ownersMatch = html.match(/Eiere?\s*<\/[^>]+>\s*<[^>]*>\s*(\d{1,2})/i) 
+      || html.match(/(\d{1,2})\s*eiere?/i) 
+      || textContent.match(/(\d{1,2})\s*eiere?/i);
     if (ownersMatch) {
-      (carData as any).owners = parseInt(ownersMatch[1]);
+      const val = parseInt(ownersMatch[1]);
+      if (val >= 1 && val <= 10) {
+        (carData as any).owners = val;
+      }
+    }
+
+    // Extract Rekkevidde (WLTP) for electric cars
+    const rekkeviddSpec = extractSpec('Rekkevidde');
+    if (rekkeviddSpec) {
+      (carData as any).rekkevidde = rekkeviddSpec;
     }
 
     // Extract equipment
