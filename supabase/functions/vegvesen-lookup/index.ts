@@ -261,7 +261,6 @@ Deno.serve(async (req) => {
       towWeight: vekt?.tillattTilhengervektMedBrems || null,
       lastEuKontroll: pkk?.sistGodkjent || null,
       nextEuKontrollDeadline: pkk?.kontrollfrist || null,
-      fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
       fuelConsumption: consumptionL100km,
       consumption: consumptionL100km,
       batteryCapacityKwh,
