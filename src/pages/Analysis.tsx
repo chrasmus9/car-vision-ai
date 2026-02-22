@@ -52,6 +52,8 @@ export interface AnalysisData {
   recalls?: { title: string; status: "active" | "expired" | "completed"; date: string; description: string; severity: "high" | "medium" | "low"; advice: string }[];
 }
 
+const CACHE_TTL_HOURS = 24;
+
 const Analysis = () => {
   const [searchParams] = useSearchParams();
   const url = searchParams.get("url") || "";
@@ -74,8 +76,34 @@ const Analysis = () => {
       return;
     }
 
+    const finnCode = url.match(/(\d{9,})/)?.[1] || "";
+
     const fetchAnalysis = async () => {
       try {
+        // Check cache first
+        if (finnCode) {
+          const { data: cached } = await supabase
+            .from("analysis_cache")
+            .select("*")
+            .eq("finn_code", finnCode)
+            .single();
+
+          if (cached) {
+            const cacheAge = (Date.now() - new Date(cached.created_at).getTime()) / (1000 * 60 * 60);
+            if (cacheAge < CACHE_TTL_HOURS) {
+              // Use cached data — skip loading entirely
+              setCarData(cached.car_data as unknown as CarData);
+              setAnalysis(cached.analysis_data as unknown as AnalysisData);
+              setVegvesenData(cached.vegvesen_data);
+              setSimilarListings((cached.similar_listings as any[]) || []);
+              setPriceStats(cached.price_stats);
+              setLoading(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              return;
+            }
+          }
+        }
+
         // Step 1: Scrape
         setLoadingStep("scraping");
         const { data: scrapeResult, error: scrapeError } = await supabase.functions.invoke("scrape-finn", {
@@ -110,7 +138,7 @@ const Analysis = () => {
           firstReg: specs.firstReg || "",
           seller: raw.seller || "Privat",
           location: specs.location || "",
-          finnCode: url.match(/(\d{9,})/)?.[1] || "",
+          finnCode: finnCode,
           imageUrl: raw.images?.[0] || "",
           images: raw.images || [],
           euExpiry: "",
@@ -119,7 +147,7 @@ const Analysis = () => {
 
         setCarData(car);
 
-        // Step 2: Vegvesen lookup (if regNr available)
+        // Step 2: Vegvesen lookup
         let vegvesen = null;
         if (car.regNr) {
           try {
@@ -162,40 +190,32 @@ const Analysis = () => {
 
         setAnalysis(aiResult.data);
 
-        // Save to recent analyses
-        const finnCode = url.match(/(\d{9,})/)?.[1] || "";
+        // Process similar listings
         const priceNum = parseInt(car.price.replace(/\D/g, "")) || 0;
         let priceDiffPercent: number | null = null;
-        if (searchResult?.success && searchResult.data.stats?.avg && priceNum > 0) {
-          priceDiffPercent = Math.round(((priceNum - searchResult.data.stats.avg) / searchResult.data.stats.avg) * 100);
-        }
-
-        await supabase.from("recent_analyses").upsert({
-          finn_code: finnCode,
-          title: car.title,
-          price: car.price,
-          year: String(car.year),
-          mileage: car.mileage,
-          fuel: car.fuel,
-          location: car.location,
-          image_url: car.imageUrl,
-          overall_risk: aiResult.data.overallRisk || "low",
-          finn_url: url,
-          price_diff_percent: priceDiffPercent,
-        } as any, { onConflict: "finn_code" });
+        let filteredListings: any[] = [];
 
         if (searchResult?.success) {
-          const filtered = (searchResult.data.listings || []).filter(
+          filteredListings = (searchResult.data.listings || []).filter(
             (l: any) => l.finnCode !== finnCode
           );
-          setSimilarListings(filtered);
+          setSimilarListings(filteredListings);
           setPriceStats(searchResult.data.stats);
 
-          // Enrich similar listings with Vegvesen data (variant + drivetrain)
-          if (filtered.length > 0) {
+          if (searchResult.data.stats?.avg && priceNum > 0) {
+            priceDiffPercent = Math.round(((priceNum - searchResult.data.stats.avg) / searchResult.data.stats.avg) * 100);
+          }
+
+          // Enrich similar listings with Vegvesen data (for missing variant/drivetrain)
+          if (filteredListings.length > 0) {
             supabase.functions.invoke("enrich-listings", {
               body: {
-                listings: filtered.map((l: any) => ({ finnCode: l.finnCode, url: l.url })),
+                listings: filteredListings.map((l: any) => ({
+                  finnCode: l.finnCode,
+                  url: l.url,
+                  variant: l.variant,
+                  drivetrain: l.drivetrain,
+                })),
               },
             }).then(({ data: enrichResult }) => {
               if (enrichResult?.success && enrichResult.data) {
@@ -216,6 +236,33 @@ const Analysis = () => {
             }).catch(e => console.warn("Enrichment failed:", e));
           }
         }
+
+        // Save to recent analyses
+        await supabase.from("recent_analyses").upsert({
+          finn_code: finnCode,
+          title: car.title,
+          price: car.price,
+          year: String(car.year),
+          mileage: car.mileage,
+          fuel: car.fuel,
+          location: car.location,
+          image_url: car.imageUrl,
+          overall_risk: aiResult.data.overallRisk || "low",
+          finn_url: url,
+          price_diff_percent: priceDiffPercent,
+        } as any, { onConflict: "finn_code" });
+
+        // Save to analysis cache
+        await supabase.from("analysis_cache").upsert({
+          finn_code: finnCode,
+          finn_url: url,
+          car_data: car as any,
+          analysis_data: aiResult.data as any,
+          vegvesen_data: vegvesen,
+          similar_listings: filteredListings,
+          price_stats: searchResult?.data?.stats || null,
+        } as any, { onConflict: "finn_code" });
+
       } catch (err: any) {
         console.error("Analysis error:", err);
         setError(err.message);
@@ -262,13 +309,10 @@ const Analysis = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        {/* Hero: Car overview */}
         <CarOverview car={carData} />
 
-        {/* AI Summary */}
         {analysis && <AISummary summary={analysis.summary} />}
 
-        {/* Price + Recalls side by side on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {priceNum > 0 && (
             <PriceAnalysis
@@ -287,17 +331,14 @@ const Analysis = () => {
           </div>
         </div>
 
-        {/* Similar listings — full width card grid */}
         <SimilarListings
           listings={similarListings}
           currentPrice={priceNum}
           isLoading={isLoadingSimilar}
         />
 
-        {/* Risk assessment */}
         {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
 
-        {/* Specs + Equipment side by side on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SpecsGrid car={carData} />
           {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}

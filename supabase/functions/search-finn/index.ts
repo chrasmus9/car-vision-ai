@@ -56,19 +56,44 @@ Deno.serve(async (req) => {
         return docModel === modelLower && doc.price?.amount > 10000;
       })
       .slice(0, 15)
-      .map((doc: any) => ({
-        title: doc.heading || `${make} ${model}`,
-        price: doc.price?.amount || 0,
-        year: String(doc.year || ''),
-        mileage: doc.mileage ? `${doc.mileage.toLocaleString('nb-NO')} km` : '',
-        sellerType: doc.dealer_segment === 'Privat' ? 'Privat' : (doc.dealer_segment ? 'Forhandler' : (doc.organisation_name ? 'Forhandler' : 'Privat')),
-        finnCode: String(doc.id || doc.ad_id || ''),
-        url: doc.canonical_url || `https://www.finn.no/mobility/item/${doc.id}`,
-        location: doc.location || '',
-        gearbox: doc.transmission || '',
-        drivetrain: doc.wheel_drive || '',
-        variant: doc.body_type || doc.trim || '',
-      }));
+      .map((doc: any) => {
+        const heading = doc.heading || `${make} ${model}`;
+        
+        // Extract variant from title by removing make/model prefix
+        const makeModel = `${make} ${model}`.trim().toLowerCase();
+        let variant = '';
+        const headingLower = heading.toLowerCase();
+        if (headingLower.startsWith(makeModel)) {
+          variant = heading.substring(makeModel.length).trim();
+          // Clean up leading/trailing punctuation
+          variant = variant.replace(/^[\s,\-–]+/, '').trim();
+        }
+        if (!variant) variant = doc.body_type || doc.trim || '';
+
+        // Extract drivetrain from title
+        let drivetrain = '';
+        if (/\b(AWD|4WD|xDrive|4x4|Firehjulsdrift|4MATIC|quattro|4motion|allgrip|e-4orce)\b/i.test(heading)) {
+          drivetrain = 'Firehjulsdrift';
+        } else if (/\b(RWD|Tohjulsdrift|Bakhjulsdrift|FWD|Forhjulsdrift)\b/i.test(heading)) {
+          drivetrain = 'Tohjulsdrift';
+        } else {
+          drivetrain = doc.wheel_drive || '';
+        }
+
+        return {
+          title: heading,
+          price: doc.price?.amount || 0,
+          year: String(doc.year || ''),
+          mileage: doc.mileage ? `${doc.mileage.toLocaleString('nb-NO')} km` : '',
+          sellerType: doc.dealer_segment === 'Privat' ? 'Privat' : (doc.dealer_segment ? 'Forhandler' : (doc.organisation_name ? 'Forhandler' : 'Privat')),
+          finnCode: String(doc.id || doc.ad_id || ''),
+          url: doc.canonical_url || `https://www.finn.no/mobility/item/${doc.id}`,
+          location: doc.location || '',
+          gearbox: doc.transmission || '',
+          drivetrain,
+          variant,
+        };
+      });
 
     console.log(`Found ${listings.length} similar listings`);
     // Debug: log raw doc keys to find drivetrain field

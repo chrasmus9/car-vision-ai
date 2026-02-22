@@ -14,11 +14,9 @@ async function scrapeRegNr(finnUrl: string): Promise<string | null> {
     if (!response.ok) return null;
     const html = await response.text();
 
-    // Look for "Sjekk heftelser på XXNNNNN" pattern
     const match = html.match(/heftelser\s+(?:på\s+)?([A-ZÆØÅa-zæøå]{2}\s?\d{4,5})/i);
     if (match) return match[1].replace(/\s/g, '').toUpperCase();
 
-    // Fallback: specs section
     const specMatch = html.match(/Registreringsnummer\s*<\/[^>]+>\s*<[^>]*>\s*([A-ZÆØÅa-zæøå]{2}\s?\d{4,5})/i);
     if (specMatch) return specMatch[1].replace(/\s/g, '').toUpperCase();
 
@@ -32,7 +30,6 @@ function deriveDrivetrain(raw: any): string {
   try {
     const tekn = raw?.kjoretoydataListe?.[0]?.godkjenning?.tekniskGodkjenning?.tekniskeData;
     
-    // Correct Vegvesen path: tekn.akslinger.akselGruppe[].akselListe.aksel[].drivAksel
     const akselGrupper = tekn?.akslinger?.akselGruppe || [];
     if (Array.isArray(akselGrupper) && akselGrupper.length > 0) {
       let drivAxleGroupCount = 0;
@@ -41,7 +38,7 @@ function deriveDrivetrain(raw: any): string {
         for (const aksel of aksler) {
           if (aksel?.drivAksel === true) {
             drivAxleGroupCount++;
-            break; // one drive axle per group is enough
+            break;
           }
         }
       }
@@ -49,16 +46,14 @@ function deriveDrivetrain(raw: any): string {
       if (drivAxleGroupCount === 1) return 'Tohjulsdrift';
     }
 
-    // Try motor/drivetrain field
     const motor = tekn?.motorOgDrivverk;
     const driveCode = motor?.kjoretoydrift?.kodeNavn || '';
     if (/fire|4|all/i.test(driveCode)) return 'Firehjulsdrift';
     if (/to|2|bakhjul|forhjul|rear|front/i.test(driveCode)) return 'Tohjulsdrift';
 
-    // Fallback: check handelsbetegnelse for AWD/4WD/xDrive etc
     const generelt = tekn?.generelt;
     const betegnelse = generelt?.handelsbetegnelse?.[0] || '';
-    if (/xdrive|awd|4wd|quattro|4motion|4matic|allgrip|symmetrical/i.test(betegnelse)) {
+    if (/xdrive|awd|4wd|quattro|4motion|4matic|allgrip|symmetrical|e-4orce/i.test(betegnelse)) {
       return 'Firehjulsdrift';
     }
 
@@ -117,18 +112,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Process max 10 listings in parallel
     const toProcess = listings.slice(0, 10);
     const results: Record<string, { variant: string; drivetrain: string }> = {};
 
     await Promise.all(
-      toProcess.map(async (listing: { finnCode: string; url: string }) => {
+      toProcess.map(async (listing: { finnCode: string; url: string; variant?: string; drivetrain?: string }) => {
+        // Only do Vegvesen lookup if we're missing data that the title didn't provide
+        const needsVariant = !listing.variant;
+        const needsDrivetrain = !listing.drivetrain;
+        
+        if (!needsVariant && !needsDrivetrain) {
+          // Already have both from title extraction
+          return;
+        }
+
         const regNr = await scrapeRegNr(listing.url);
         if (!regNr || !/^[A-ZÆØÅ]{2}\d{4,5}$/.test(regNr)) return;
 
         const data = await lookupVegvesen(regNr, apiKey);
         if (data) {
-          results[listing.finnCode] = data;
+          results[listing.finnCode] = {
+            variant: needsVariant ? data.variant : (listing.variant || data.variant),
+            drivetrain: needsDrivetrain ? data.drivetrain : (listing.drivetrain || data.drivetrain),
+          };
         }
       })
     );
