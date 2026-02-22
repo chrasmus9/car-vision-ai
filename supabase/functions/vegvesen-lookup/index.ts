@@ -195,6 +195,11 @@ Deno.serve(async (req) => {
     const forstegangsGodkjenningDato = godkjenning?.forstegangsGodkjenning?.forstegangsGodkjenningDato || null;
     const registrertForstegangNorgeDato = reg?.registrertForstegangNorgeDato || null;
 
+    // Extract bruktimportert boolean from Vegvesen
+    const bruktimportertMerknad = godkjenning?.kjoretoymerknad?.bruktimportert;
+    const bruktimportertReg = data?.kjoretoydataListe?.[0]?.registrering?.bruktimportert;
+    const bruktimportert = bruktimportertMerknad ?? bruktimportertReg ?? null;
+
     const result = {
       make: generelt?.merke?.[0]?.merke || '',
       model: generelt?.handelsbetegnelse?.[0] || '',
@@ -218,6 +223,7 @@ Deno.serve(async (req) => {
       fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
       electricConsumption: forbruk?.elektriskEnergiforbruk || forbruk?.elektriskRekkeviddeKm || null,
       batteryCapacityKwh,
+      bruktimportert,
       svvCode,
     };
 

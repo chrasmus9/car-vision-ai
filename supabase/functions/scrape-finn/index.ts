@@ -252,12 +252,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Extract Rekkevidde (WLTP) for electric cars — use last number+km match to skip disclaimer text
+    // Extract Rekkevidde (WLTP) for electric cars
     const rekkeviddSpec = extractSpec('Rekkevidde');
     if (rekkeviddSpec) {
-      const kmMatches = [...rekkeviddSpec.matchAll(/(\d+)\s*km/gi)];
-      const lastKm = kmMatches[kmMatches.length - 1]?.[1];
-      (carData as any).rekkevidde = lastKm ? `${lastKm} km` : rekkeviddSpec;
+      const extractWLTP = (rawText: string | null | undefined): number | null => {
+        if (!rawText || typeof rawText !== 'string') return null;
+        const allMatches = [...rawText.matchAll(/(\d+)\s*km/gi)];
+        if (allMatches.length === 0) return null;
+        const lastMatch = allMatches[allMatches.length - 1];
+        return parseInt(lastMatch[1], 10);
+      };
+      const wltpKm = extractWLTP(rekkeviddSpec);
+      (carData as any).rekkevidde = wltpKm ? `${wltpKm} km` : rekkeviddSpec;
     }
 
     // Extract Batterikapasitet from Finn structured spec
