@@ -177,6 +177,27 @@ Deno.serve(async (req) => {
     const miljo = tekn?.miljodata?.miljoOgdrivstoffGruppe?.[0];
     const forbruk = miljo?.forbrukOgUtslipp?.[0];
 
+    // Extract fuel consumption from multiple possible paths
+    const rawConsumption =
+      motor?.forbrukOgUtslipp?.forbrukBlandet ??
+      motor?.forbrukOgUtslipp?.forbruk ??
+      motor?.drivstofforbruk ??
+      forbruk?.forbrukBlandetKjoring ??
+      forbruk?.forbruk ??
+      null;
+
+    // Parse and normalize to l/100km
+    let consumptionL100km: number | null = null;
+    if (rawConsumption != null) {
+      const strVal = String(rawConsumption).replace(',', '.');
+      const num = parseFloat(strVal);
+      if (!isNaN(num)) {
+        // Vegvesen stores as "liter per 10 km" (e.g. 0.64 = 6.4 l/100km)
+        consumptionL100km = num < 2 ? Math.round(num * 100) / 10 : Math.round(num * 10) / 10;
+      }
+    }
+    console.log('Consumption raw:', rawConsumption, '-> l/100km:', consumptionL100km);
+
     // Extract battery capacity from elMotor data
     const elMotorer = motor?.elMotor || [];
     let batteryCapacityKwh: number | null = null;
@@ -241,7 +262,7 @@ Deno.serve(async (req) => {
       lastEuKontroll: pkk?.sistGodkjent || null,
       nextEuKontrollDeadline: pkk?.kontrollfrist || null,
       fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
-      electricConsumption: forbruk?.elektriskEnergiforbruk || forbruk?.elektriskRekkeviddeKm || null,
+      consumption: consumptionL100km,
       batteryCapacityKwh,
       bruktimportert,
       svvCode,

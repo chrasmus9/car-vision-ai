@@ -48,7 +48,8 @@ const AllInfoCards = (props: AllInfoCardsProps) => {
       else if (val <= 9) color = "text-yellow-600 dark:text-yellow-400";
       else color = "text-red-600 dark:text-red-400";
     }
-    return { value: `${val} l/100km`, color };
+    const display = String(val).replace('.', ',');
+    return { value: `${display} l/100km`, color };
   };
 
   const consumptionInfo = !isElectric ? getConsumptionInfo() : null;

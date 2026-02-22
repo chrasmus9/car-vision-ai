@@ -299,13 +299,7 @@ const Analysis = () => {
   }, [url]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <AnalysisLoading loadingStep={loadingStep} fromCache={fromCache} />
-        <Footer />
-      </div>
-    );
+    return <AnalysisLoading loadingStep={loadingStep} fromCache={fromCache} />;
   }
 
   if (error || !carData) {
@@ -364,7 +358,7 @@ const Analysis = () => {
           bruktimportert={vegvesenData?.bruktimportert}
           regNr={carData.regNr}
           fuel={carData.fuel}
-          consumption={vegvesenData?.consumption || carData.co2}
+          consumption={vegvesenData?.consumption ? String(vegvesenData.consumption).replace('.', ',') : null}
         />
 
         {/* Høydepunkter + Risikoer */}
