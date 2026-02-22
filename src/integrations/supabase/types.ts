@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_cache: {
+        Row: {
+          analysis_data: Json
+          car_data: Json
+          created_at: string
+          finn_code: string
+          finn_url: string | null
+          id: string
+          price_stats: Json | null
+          similar_listings: Json | null
+          vegvesen_data: Json | null
+        }
+        Insert: {
+          analysis_data: Json
+          car_data: Json
+          created_at?: string
+          finn_code: string
+          finn_url?: string | null
+          id?: string
+          price_stats?: Json | null
+          similar_listings?: Json | null
+          vegvesen_data?: Json | null
+        }
+        Update: {
+          analysis_data?: Json
+          car_data?: Json
+          created_at?: string
+          finn_code?: string
+          finn_url?: string | null
+          id?: string
+          price_stats?: Json | null
+          similar_listings?: Json | null
+          vegvesen_data?: Json | null
+        }
+        Relationships: []
+      }
       recent_analyses: {
         Row: {
           created_at: string
