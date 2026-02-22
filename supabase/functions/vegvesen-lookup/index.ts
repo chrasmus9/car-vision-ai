@@ -215,8 +215,10 @@ Deno.serve(async (req) => {
       data?.bruktimportert,
     ];
     console.log('bruktimportert candidates:', JSON.stringify(bruktimportertPaths));
-    const bruktimportert = bruktimportertPaths.find((v) => v !== null && v !== undefined) ?? null;
-    console.log('bruktimportert resolved:', bruktimportert);
+    const rawBruktimportert = bruktimportertPaths.find((v) => v !== null && v !== undefined);
+    // If field is explicitly set, use it. If absent but we got valid data, it means NOT imported.
+    const bruktimportert = rawBruktimportert !== undefined ? rawBruktimportert : false;
+    console.log('bruktimportert resolved:', bruktimportert, '(raw:', rawBruktimportert, ')');
 
     const result = {
       make: generelt?.merke?.[0]?.merke || '',
