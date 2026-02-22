@@ -326,6 +326,11 @@ const Analysis = () => {
             const m = carData.power?.match(/([\d\s]+)\s*hk/i);
             return m ? `${m[1].replace(/\s/g, '')} hk` : null;
           })(),
+          rekkevidde: carData.rekkevidde || null,
+          consumption: vegvesenData?.consumption ? String(vegvesenData.consumption).replace('.', ',') : null,
+          isElectric: carData.fuel?.toLowerCase() === 'el' || carData.fuel?.toLowerCase()?.includes('elektr') || false,
+          isHybrid: carData.fuel?.toLowerCase()?.includes('hybrid') || false,
+          hybridKategori: vegvesenData?.hybridKategori || null,
         }} />
 
         {/* Row A: AI-oppsummering + Prisanalyse side by side */}
@@ -344,10 +349,6 @@ const Analysis = () => {
         {/* Row B: All info cards in one wrapping row */}
         <AllInfoCards
           owners={carData.owners}
-          rekkevidde={carData.rekkevidde}
-          isElectric={carData.fuel?.toLowerCase() === 'el' || carData.fuel?.toLowerCase()?.includes('elektr') || false}
-          hybridKategori={vegvesenData?.hybridKategori || null}
-          isHybrid={carData.fuel?.toLowerCase()?.includes('hybrid') || false}
           lastEuKontroll={vegvesenData?.lastEuKontroll}
           nextEuKontrollDeadline={vegvesenData?.nextEuKontrollDeadline}
           mileage={carData.mileage}
@@ -355,8 +356,6 @@ const Analysis = () => {
           registrertForstegangNorgeDato={vegvesenData?.registrertForstegangNorgeDato}
           bruktimportert={vegvesenData?.bruktimportert}
           regNr={carData.regNr}
-          fuel={carData.fuel}
-          consumption={vegvesenData?.consumption ? String(vegvesenData.consumption).replace('.', ',') : null}
         />
 
         {/* Høydepunkter + Risikoer */}
