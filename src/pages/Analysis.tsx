@@ -159,7 +159,9 @@ const Analysis = () => {
           owners: raw.owners || undefined,
           rekkevidde: raw.rekkevidde || undefined,
           batteryCapacityKwh: raw.batteryCapacityKwh || undefined,
-        };
+          garanti: raw.garanti || undefined,
+          servicehistorikk: raw.servicehistorikk || undefined,
+        } as any;
 
         setCarData(car);
 
@@ -356,6 +358,8 @@ const Analysis = () => {
           registrertForstegangNorgeDato={vegvesenData?.registrertForstegangNorgeDato}
           bruktimportert={vegvesenData?.bruktimportert}
           regNr={carData.regNr}
+          garanti={(carData as any).garanti || null}
+          servicehistorikk={(carData as any).servicehistorikk || null}
         />
 
         {/* Høydepunkter + Risikoer */}

@@ -292,6 +292,27 @@ Deno.serve(async (req) => {
       (carData as any).equipment = items.map(m => m[1].replace(/<[^>]*>/g, '').trim()).filter(Boolean);
     }
 
+    // Extract Garanti section
+    const garantiSection = html.match(/Garanti[\s\S]*?(?=<\/section|Utstyr|Beskrivelse|Service|$)/i)?.[0] || '';
+    const garantiText = garantiSection.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    // Look for known patterns
+    const garantiMatch = garantiText.match(/((?:Bruktbilgaranti|NAF\s+Bruktbilgaranti|Fabrikkgaranti|Nybilgaranti|Garantiforsikring)[^.]*?)(?:\.|$)/i)
+      || garantiText.match(/Garanti\s+(.*?)(?:\s{2,}|$)/i);
+    if (garantiMatch) {
+      (carData as any).garanti = garantiMatch[1].trim().substring(0, 100);
+    }
+
+    // Extract Servicehistorikk section
+    const serviceSection = html.match(/Service[\s\S]*?(?=<\/section|Garanti|Utstyr|Beskrivelse|$)/i)?.[0] || '';
+    const serviceText = serviceSection.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (/serviceprogram\s+(?:er\s+)?fulgt|i\s+henhold\s+til\s+fabrikkens/i.test(serviceText)) {
+      (carData as any).servicehistorikk = "Fulgt serviceprogram";
+    } else if (/servicehistorikk\s+foreligger/i.test(serviceText)) {
+      (carData as any).servicehistorikk = "Servicehistorikk foreligger";
+    } else if (/serviceh(?:e|i)ft/i.test(serviceText) || /service\s*bok/i.test(serviceText)) {
+      (carData as any).servicehistorikk = "Servicehefte følger";
+    }
+
     // Extract seller
     const sellerMatch = html.match(/class="[^"]*"[^>]*>\s*([\w\s]+(?:AS|ENK|ANS|DA))/i);
     if (sellerMatch) {
