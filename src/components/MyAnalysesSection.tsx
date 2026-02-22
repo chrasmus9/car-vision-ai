@@ -109,6 +109,9 @@ const MyAnalysesSection = () => {
                 fuel={car?.fuel || "–"}
                 location={car?.location || "–"}
                 timeAgo={timeAgo(item.created_at)}
+                finnCode={item.finn_code}
+                finnUrl={url}
+                carData={car}
               />
             </Link>
           </CarCarouselSlide>

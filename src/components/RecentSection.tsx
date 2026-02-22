@@ -62,6 +62,8 @@ const RecentSection = () => {
               location={car.location}
               timeAgo={timeAgo(car.created_at)}
               priceDiffPercent={car.price_diff_percent}
+              finnCode={car.finn_code}
+              finnUrl={car.finn_url}
             />
           </Link>
         </CarCarouselSlide>
