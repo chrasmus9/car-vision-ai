@@ -26,10 +26,6 @@ const HeroSection = () => {
       });
       return;
     }
-    toast({
-      title: "Analyse starter...",
-      description: "Vi analyserer bilannonsen din nå.",
-    });
     navigate(`/analyse?url=${encodeURIComponent(url)}`);
   };
 

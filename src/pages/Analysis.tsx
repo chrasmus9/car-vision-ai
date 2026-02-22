@@ -284,10 +284,10 @@ const Analysis = () => {
       } catch (err: any) {
         console.error("Analysis error:", err);
         setError(err.message);
-        // Error is shown in the error UI below
       } finally {
         setLoadingStep("done");
-        setLoading(false);
+        // Wait for loading screen fade-out (400ms) before showing results
+        setTimeout(() => setLoading(false), 500);
       }
     };
 
