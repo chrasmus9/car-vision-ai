@@ -30,9 +30,11 @@ Deno.serve(async (req) => {
     let lookupMethod = '';
     let response: Response | null = null;
 
-    // Try VIN first
-    if (vin) {
-      const cleanVin = vin.replace(/\s/g, '').toUpperCase();
+    // Try VIN first (must be exactly 17 alphanumeric chars)
+    const cleanVin = vin ? vin.replace(/\s/g, '').toUpperCase() : '';
+    const isValidVin = /^[A-HJ-NPR-Z0-9]{17}$/i.test(cleanVin);
+
+    if (vin && isValidVin) {
       console.log('Trying VIN lookup:', cleanVin);
       lookupMethod = 'vin';
 
