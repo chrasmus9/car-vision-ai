@@ -1,9 +1,8 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import CarCard from "./CarCard";
+import CarCarousel, { CarCarouselSlide } from "./CarCarousel";
 
 interface RecentCar {
   finn_code: string;
@@ -29,7 +28,7 @@ const RecentSection = () => {
         .from("recent_analyses")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(4);
+        .limit(12);
 
       if (data) setCars(data as unknown as RecentCar[]);
     };
@@ -49,30 +48,25 @@ const RecentSection = () => {
   };
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl md:text-3xl text-foreground">Andre så nylig på</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {cars.map((car) => (
-            <Link key={car.finn_code} to={`/analyse?url=${encodeURIComponent(car.finn_url)}`}>
-              <CarCard
-                image={car.image_url}
-                title={car.title}
-                price={car.price}
-                year={car.year}
-                mileage={car.mileage}
-                fuel={car.fuel}
-                location={car.location}
-                timeAgo={timeAgo(car.created_at)}
-                priceDiffPercent={car.price_diff_percent}
-              />
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
+    <CarCarousel title="Andre så nylig på">
+      {cars.map((car) => (
+        <CarCarouselSlide key={car.finn_code}>
+          <Link to={`/analyse?url=${encodeURIComponent(car.finn_url)}`}>
+            <CarCard
+              image={car.image_url}
+              title={car.title}
+              price={car.price}
+              year={car.year}
+              mileage={car.mileage}
+              fuel={car.fuel}
+              location={car.location}
+              timeAgo={timeAgo(car.created_at)}
+              priceDiffPercent={car.price_diff_percent}
+            />
+          </Link>
+        </CarCarouselSlide>
+      ))}
+    </CarCarousel>
   );
 };
 
