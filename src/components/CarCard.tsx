@@ -1,8 +1,8 @@
 import { Calendar, Fuel, Gauge, MapPin, TrendingDown, TrendingUp, Minus, Heart } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { useAuth } from "./AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect, useCallback } from "react";
+import { useFavorites } from "./FavoritesProvider";
+import { useCallback } from "react";
 
 interface CarCardProps {
   image: string;
@@ -20,51 +20,21 @@ interface CarCardProps {
 }
 
 const CarCard = ({ image, title, price, year, mileage, fuel, location, timeAgo, priceDiffPercent, finnCode, finnUrl, carData }: CarCardProps) => {
-  const { user, setShowAuthModal } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite, loading } = useFavorites();
 
-  useEffect(() => {
-    if (!user || !finnCode) return;
-    supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("finn_code", finnCode)
-      .maybeSingle()
-      .then(({ data }) => setIsFavorite(!!data));
-  }, [user, finnCode]);
+  const fav = finnCode ? isFavorite(finnCode) : false;
 
-  const toggleFavorite = useCallback(async (e: React.MouseEvent) => {
+  const handleToggle = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (!finnCode || loading) return;
-    const wasFavorite = isFavorite;
-    setIsFavorite(!wasFavorite);
-    setLoading(true);
-    try {
-      if (wasFavorite) {
-        const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("finn_code", finnCode);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("favorites").insert({
-          user_id: user.id,
-          finn_code: finnCode,
-          finn_url: finnUrl || null,
-          car_data: carData || { title, price, year, mileage, fuel, location, imageUrl: image },
-        });
-        if (error) throw error;
-      }
-    } catch {
-      setIsFavorite(wasFavorite);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, finnCode, isFavorite, loading, setShowAuthModal, finnUrl, carData, title, price, year, mileage, fuel, location, image]);
+    if (!finnCode) return;
+    await toggleFavorite(
+      finnCode,
+      finnUrl,
+      carData || { title, price, year, mileage, fuel, location, imageUrl: image }
+    );
+  }, [finnCode, finnUrl, carData, title, price, year, mileage, fuel, location, image, toggleFavorite]);
 
   const getPriceBadge = () => {
     if (priceDiffPercent == null) return null;
@@ -92,12 +62,12 @@ const CarCard = ({ image, title, price, year, mileage, fuel, location, timeAgo, 
         </span>
         {finnCode && (
           <button
-            onClick={toggleFavorite}
+            onClick={handleToggle}
             className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center hover:bg-background/80 transition-colors"
-            aria-label={isFavorite ? "Fjern fra favoritter" : "Legg til i favoritter"}
+            aria-label={fav ? "Fjern fra favoritter" : "Legg til i favoritter"}
           >
             <Heart
-              className={`w-4 h-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground"}`}
+              className={`w-4 h-4 transition-colors ${fav ? "fill-red-500 text-red-500" : "text-foreground"}`}
             />
           </button>
         )}

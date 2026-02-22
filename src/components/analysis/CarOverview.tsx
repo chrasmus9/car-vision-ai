@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { ExternalLink, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
+import { useFavorites } from "@/components/FavoritesProvider";
 
 interface CarOverviewProps {
   car: {
@@ -25,57 +25,22 @@ interface CarOverviewProps {
 const CarOverview = ({ car }: CarOverviewProps) => {
   const images = car.images?.length > 0 ? car.images : car.imageUrl ? [car.imageUrl] : [];
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { user, setShowAuthModal } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
-  useEffect(() => {
-    if (!user || !car.finnCode) return;
-    supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("finn_code", car.finnCode)
-      .maybeSingle()
-      .then(({ data }) => setIsFavorite(!!data));
-  }, [user, car.finnCode]);
+  const fav = isFavorite(car.finnCode);
 
-  const toggleFavorite = useCallback(async () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (!car.finnCode || favLoading) return;
-    const wasFavorite = isFavorite;
-    setIsFavorite(!wasFavorite);
-    setFavLoading(true);
-    try {
-      if (wasFavorite) {
-        const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("finn_code", car.finnCode);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("favorites").insert({
-          user_id: user.id,
-          finn_code: car.finnCode,
-          finn_url: `https://www.finn.no/mobility/item/${car.finnCode}`,
-          car_data: {
-            title: car.title,
-            price: car.price,
-            year: car.year,
-            mileage: car.mileage,
-            fuel: car.fuel,
-            location: car.location,
-            imageUrl: car.imageUrl,
-          },
-        });
-        if (error) throw error;
-      }
-    } catch {
-      setIsFavorite(wasFavorite);
-    } finally {
-      setFavLoading(false);
-    }
-  }, [user, car, isFavorite, favLoading, setShowAuthModal]);
+  const handleToggle = useCallback(async () => {
+    await toggleFavorite(car.finnCode, `https://www.finn.no/mobility/item/${car.finnCode}`, {
+      title: car.title,
+      price: car.price,
+      year: car.year,
+      mileage: car.mileage,
+      fuel: car.fuel,
+      location: car.location,
+      imageUrl: car.imageUrl,
+    });
+  }, [car, toggleFavorite]);
 
   const prev = () => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1));
   const next = () => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1));
@@ -117,11 +82,11 @@ const CarOverview = ({ car }: CarOverviewProps) => {
         )}
 
         <button
-          onClick={toggleFavorite}
+          onClick={handleToggle}
           className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center hover:bg-background/80 transition-colors"
-          aria-label={isFavorite ? "Fjern fra favoritter" : "Legg til i favoritter"}
+          aria-label={fav ? "Fjern fra favoritter" : "Legg til i favoritter"}
         >
-          <Heart className={`w-5 h-5 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground"}`} />
+          <Heart className={`w-5 h-5 transition-colors ${fav ? "fill-red-500 text-red-500" : "text-foreground"}`} />
         </button>
       </div>
 

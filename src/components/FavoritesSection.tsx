@@ -1,18 +1,10 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
+import { useFavorites } from "./FavoritesProvider";
 import { Link } from "react-router-dom";
 import CarCard from "./CarCard";
 import CarCarousel, { CarCarouselSlide } from "./CarCarousel";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface Favorite {
-  finn_code: string;
-  finn_url: string | null;
-  car_data: any;
-  created_at: string;
-}
 
 const PlaceholderCard = () => (
   <div className="bg-muted/40 rounded-2xl border border-border overflow-hidden">
@@ -31,21 +23,7 @@ const PlaceholderCard = () => (
 
 const FavoritesSection = () => {
   const { user, setShowAuthModal } = useAuth();
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetchFavorites = async () => {
-      const { data } = await supabase
-        .from("favorites")
-        .select("finn_code, finn_url, car_data, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(12);
-      if (data && data.length > 0) setFavorites(data);
-    };
-    fetchFavorites();
-  }, [user]);
+  const { favorites } = useFavorites();
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -57,7 +35,6 @@ const FavoritesSection = () => {
     return `${Math.floor(hours / 24)}d siden`;
   };
 
-  // Not logged in — show placeholder
   if (!user) {
     return (
       <section className="py-16 px-4">
@@ -89,7 +66,6 @@ const FavoritesSection = () => {
     );
   }
 
-  // Logged in but no favorites — hide section
   if (favorites.length === 0) return null;
 
   return (
