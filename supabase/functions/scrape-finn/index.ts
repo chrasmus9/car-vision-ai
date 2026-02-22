@@ -211,6 +211,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Extract number of owners
+    const ownersMatch = html.match(/(\d+)\s*eiere?/i) || textContent.match(/(\d+)\s*eiere?/i);
+    if (ownersMatch) {
+      (carData as any).owners = parseInt(ownersMatch[1]);
+    }
+
     // Extract equipment
     const equipMatch = html.match(/Utstyr[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/i);
     if (equipMatch) {

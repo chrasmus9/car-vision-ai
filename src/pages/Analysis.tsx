@@ -7,8 +7,7 @@ import RiskAssessment from "@/components/analysis/RiskAssessment";
 import PriceAnalysis from "@/components/analysis/PriceAnalysis";
 import SimilarListings from "@/components/analysis/SimilarListings";
 import EuKontrollSection from "@/components/analysis/EuKontrollSection";
-import SpecsGrid from "@/components/analysis/SpecsGrid";
-import EquipmentList from "@/components/analysis/EquipmentList";
+import InfoCards from "@/components/analysis/InfoCards";
 import AISummary from "@/components/analysis/AISummary";
 import RecallsSection from "@/components/analysis/RecallsSection";
 import AnalysisLoading from "@/components/analysis/AnalysisLoading";
@@ -42,6 +41,7 @@ export interface CarData {
   images: string[];
   euExpiry: string;
   equipment: string[];
+  owners?: number;
 }
 
 export interface AnalysisData {
@@ -153,6 +153,7 @@ const Analysis = () => {
           images: raw.images || [],
           euExpiry: "",
           equipment: raw.equipment || [],
+          owners: raw.owners || undefined,
         };
 
         setCarData(car);
@@ -324,7 +325,7 @@ const Analysis = () => {
 
         {analysis && <AISummary summary={analysis.summary} />}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {priceNum > 0 && (
             <PriceAnalysis
               price={priceNum}
@@ -333,27 +334,32 @@ const Analysis = () => {
               isLoadingSimilar={isLoadingSimilar}
             />
           )}
-          <div className="space-y-6">
-            {analysis && <RecallsSection recalls={analysis.recalls || []} />}
-            <EuKontrollSection
-              lastDate={vegvesenData?.lastEuKontroll}
-              nextDeadline={vegvesenData?.nextEuKontrollDeadline}
+          <div className="lg:col-span-2 space-y-4">
+            <InfoCards
+              towWeight={vegvesenData?.towWeight}
+              owners={carData.owners}
+              maxSpeed={vegvesenData?.maxSpeed}
+              fuelConsumption={vegvesenData?.fuelConsumption}
+              electricConsumption={vegvesenData?.electricConsumption}
+              fuelType={carData.fuel}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {analysis && <RecallsSection recalls={analysis.recalls || []} />}
+              <EuKontrollSection
+                lastDate={vegvesenData?.lastEuKontroll}
+                nextDeadline={vegvesenData?.nextEuKontrollDeadline}
+              />
+            </div>
           </div>
         </div>
+
+        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
 
         <SimilarListings
           listings={similarListings}
           currentPrice={priceNum}
           isLoading={isLoadingSimilar}
         />
-
-        {analysis && <RiskAssessment risks={analysis.risks} highlights={analysis.highlights} />}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SpecsGrid car={carData} />
-          {carData.equipment.length > 0 && <EquipmentList equipment={carData.equipment} />}
-        </div>
       </main>
       <Footer />
     </div>

@@ -40,42 +40,42 @@ const PriceAnalysis = ({ price, assessment, similarListings, priceStats, isLoadi
   const indicator = getPriceIndicator();
 
   return (
-    <div className="bg-card rounded-2xl border border-border card-shadow p-6 space-y-5">
+    <div className="bg-card rounded-xl border border-border card-shadow p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Prisanalyse</h2>
+        <h2 className="text-base font-semibold text-foreground">Prisanalyse</h2>
         {indicator && (
-          <Badge variant="outline" className={`gap-1.5 ${indicator.color}`}>
-            <indicator.icon className="w-3.5 h-3.5" />
+          <Badge variant="outline" className={`gap-1 text-xs ${indicator.color}`}>
+            <indicator.icon className="w-3 h-3" />
             {indicator.label}
           </Badge>
         )}
       </div>
 
       <div>
-        <p className="text-2xl font-bold text-foreground">{price.toLocaleString("nb-NO")} kr</p>
+        <p className="text-xl font-bold text-foreground">{price.toLocaleString("nb-NO")} kr</p>
         <p className="text-xs text-muted-foreground">Annonsepris</p>
       </div>
 
       {priceStats && (
-        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
+        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border">
           <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">{priceStats.min.toLocaleString("nb-NO")} kr</p>
-            <p className="text-xs text-muted-foreground">Laveste</p>
+            <p className="text-xs font-semibold text-foreground">{priceStats.min.toLocaleString("nb-NO")} kr</p>
+            <p className="text-[10px] text-muted-foreground">Laveste</p>
           </div>
           <div className="text-center">
-            <p className="text-sm font-semibold text-primary">{priceStats.avg.toLocaleString("nb-NO")} kr</p>
-            <p className="text-xs text-muted-foreground">Gjennomsnitt</p>
+            <p className="text-xs font-semibold text-primary">{priceStats.avg.toLocaleString("nb-NO")} kr</p>
+            <p className="text-[10px] text-muted-foreground">Gjennomsnitt</p>
           </div>
           <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">{priceStats.max.toLocaleString("nb-NO")} kr</p>
-            <p className="text-xs text-muted-foreground">Høyeste</p>
+            <p className="text-xs font-semibold text-foreground">{priceStats.max.toLocaleString("nb-NO")} kr</p>
+            <p className="text-[10px] text-muted-foreground">Høyeste</p>
           </div>
         </div>
       )}
 
       {priceDiffFromAvg !== null && priceStats && (
-        <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-sm text-foreground/80">
+        <div className="bg-muted/50 rounded-lg p-2.5">
+          <p className="text-xs text-foreground/80">
             Denne bilen er{" "}
             <span className={`font-semibold ${priceDiffFromAvg < 0 ? "text-green-500" : priceDiffFromAvg > 0 ? "text-red-500" : "text-yellow-500"}`}>
               {Math.abs(priceDiffFromAvg).toLocaleString("nb-NO")} kr {priceDiffFromAvg < 0 ? "under" : priceDiffFromAvg > 0 ? "over" : "lik"}
@@ -86,8 +86,8 @@ const PriceAnalysis = ({ price, assessment, similarListings, priceStats, isLoadi
       )}
 
       {assessment && (
-        <div className="pt-3 border-t border-border">
-          <p className="text-sm text-foreground/80 leading-relaxed">{assessment}</p>
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs text-foreground/80 leading-relaxed">{assessment}</p>
         </div>
       )}
     </div>

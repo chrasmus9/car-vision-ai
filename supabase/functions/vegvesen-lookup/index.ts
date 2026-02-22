@@ -85,6 +85,9 @@ Deno.serve(async (req) => {
     const karosseri = tekn?.karosseriOgLasteplan;
     const vekt = tekn?.vekter;
 
+    const miljo = tekn?.miljodata?.miljoOgdrivstoffGruppe?.[0];
+    const forbruk = miljo?.forbrukOgUtslipp?.[0];
+
     const result = {
       // Basic info
       make: generelt?.merke?.[0]?.merke || '',
@@ -99,13 +102,18 @@ Deno.serve(async (req) => {
       engineSize: motor?.motor?.[0]?.slagvolum || null,
       gearbox: motor?.girkassetype?.kodeNavn || '',
       drivetrain: motor?.kjoretoydrift?.kodeNavn || '',
+      maxSpeed: motor?.maksimumHastighet || null,
       // Body
       color: karosseri?.rpieFarger?.[0]?.fpipigeKode?.kodeNavn || karosseri?.kapirosspieritype?.kodeNavn || '',
       seats: karosseri?.antallSitteplasser || null,
       weight: vekt?.egenvekt || null,
+      towWeight: vekt?.tillattTilhengervektMedBrems || null,
       // EU-kontroll (PKK)
       lastEuKontroll: pkk?.sistGodkjent || null,
       nextEuKontrollDeadline: pkk?.kontrollfrist || null,
+      // Fuel consumption
+      fuelConsumption: forbruk?.forbrukBlandetKjoring || null,
+      electricConsumption: forbruk?.elektriskRekkeviddeKm || forbruk?.elektriskEnergiforbruk || null,
     };
 
     // Try to get more fields from the raw data
