@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { Car } from "lucide-react";
 
 const tips = [
   "Visste du at 1 av 3 bruktbiler har skjulte heftelser?",
-  "Vi sjekker kilometerstand, eierhistorikk og kjente feil",
-  "En grundig sjekk kan spare deg for tusenvis av kroner",
-  "BilSjekk analyserer både tekniske og kommersielle risikoer",
+  "En EU-kontroll avdekker ikke skjulte feil — AI-analyse gjør det.",
+  "Kilometerstand kan justeres — sjekk alltid historikk.",
 ];
 
 const statusTexts: [number, string][] = [
@@ -78,35 +78,55 @@ const AnalysisLoading = ({ loadingStep = "scraping", fromCache = false }: Analys
         setTipIndex((i) => (i + 1) % tips.length);
         setFade(true);
       }, 300);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [fromCache]);
 
   if (fromCache || !visible) return null;
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-4 py-32 gap-6">
-      {/* Full-width progress bar */}
-      <div className="fixed top-[64px] left-0 right-0 z-50">
-        <div
-          className="h-[3px] bg-primary transition-all duration-500 ease-out"
-          style={{
-            width: `${progress}%`,
-            boxShadow: "0 0 8px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.2)",
-          }}
-        />
+    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center px-4">
+      {/* Brand logo */}
+      <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-6">
+        <Car className="w-7 h-7 text-primary-foreground" />
       </div>
 
-      <h1 className="text-2xl font-semibold text-foreground">Analyserer bilen...</h1>
-      <p className="text-sm text-muted-foreground text-center">{getStatusText(progress)}</p>
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-foreground mb-8" style={{ fontFamily: 'var(--font-heading)' }}>
+        Analyserer bilen...
+      </h1>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-[400px] mb-2">
+        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+            style={{
+              width: `${progress}%`,
+              boxShadow: "0 0 8px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.2)",
+            }}
+          />
+        </div>
+        {/* Percentage */}
+        <p className="text-xs text-primary text-right mt-1 tabular-nums">
+          {Math.round(progress)}%
+        </p>
+      </div>
+
+      {/* Status text */}
+      <p className="text-sm text-muted-foreground text-center mb-6">
+        {getStatusText(progress)}
+      </p>
+
+      {/* Fun fact */}
       <p
-        className={`text-xs text-muted-foreground/70 text-center max-w-md transition-opacity duration-300 ${
+        className={`text-xs text-muted-foreground/60 italic text-center max-w-sm transition-opacity duration-300 ${
           fade ? "opacity-100" : "opacity-0"
         }`}
       >
         {tips[tipIndex]}
       </p>
-    </main>
+    </div>
   );
 };
 
