@@ -27,6 +27,16 @@ Deno.serve(async (req) => {
     }
 
     const cleanRegNr = regNr.replace(/\s/g, '').toUpperCase();
+    
+    // Validate Norwegian plate format: 2 letters + 5 digits (new) or 2 letters + 4 digits (old)
+    if (!/^[A-ZÆØÅ]{2}\d{4,5}$/.test(cleanRegNr)) {
+      console.error('Invalid regNr format:', cleanRegNr);
+      return new Response(
+        JSON.stringify({ success: false, error: `Invalid registration number format: ${cleanRegNr}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('Looking up vehicle:', cleanRegNr);
 
     const response = await fetch(

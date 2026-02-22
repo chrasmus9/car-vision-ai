@@ -145,13 +145,25 @@ Deno.serve(async (req) => {
         seats: extractSpec('Seter'),
         doors: extractSpec('Dører'),
         color: extractSpec('Farge'),
-        regNr: extractSpec('Registreringsnummer'),
+        regNr: '',
         vin: extractSpec('Chassis'),
         firstReg: extractSpec('1\\. gang'),
         location: '',
       },
       jsonLd,
     };
+
+    // Extract registration number - look for "Sjekk heftelser på XXNNNNN" pattern (most reliable)
+    const regNrFromHeftelser = html.match(/heftelser\s+(?:på\s+)?([A-ZÆØÅa-zæøå]{2}\s?\d{4,5})/i);
+    if (regNrFromHeftelser) {
+      carData.specs.regNr = regNrFromHeftelser[1].replace(/\s/g, '').toUpperCase();
+    } else {
+      // Fallback: extract from specs section specifically
+      const regNrSpec = specsSection.match(/Registreringsnummer\s*<\/[^>]+>\s*<[^>]*>\s*([A-ZÆØÅa-zæøå]{2}\s?\d{4,5})/i);
+      if (regNrSpec) {
+        carData.specs.regNr = regNrSpec[1].replace(/\s/g, '').toUpperCase();
+      }
+    }
 
     // Extract location (city) from the "Sted" section near end of page
     // Text format: "Sted Address, POSTCODE City" or "Sted POSTCODE City"
