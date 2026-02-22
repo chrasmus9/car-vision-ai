@@ -4,10 +4,10 @@ import { useAuth } from "./AuthProvider";
 import { Link } from "react-router-dom";
 import CarCard from "./CarCard";
 import CarCarousel, { CarCarouselSlide } from "./CarCarousel";
-import { Clock } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface CachedAnalysis {
+interface Favorite {
   finn_code: string;
   finn_url: string | null;
   car_data: any;
@@ -29,22 +29,22 @@ const PlaceholderCard = () => (
   </div>
 );
 
-const MyAnalysesSection = () => {
+const FavoritesSection = () => {
   const { user, setShowAuthModal } = useAuth();
-  const [cars, setCars] = useState<CachedAnalysis[]>([]);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    const fetchMine = async () => {
+    const fetchFavorites = async () => {
       const { data } = await supabase
-        .from("analysis_cache")
+        .from("favorites")
         .select("finn_code, finn_url, car_data, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(12);
-      if (data && data.length > 0) setCars(data);
+      if (data && data.length > 0) setFavorites(data);
     };
-    fetchMine();
+    fetchFavorites();
   }, [user]);
 
   const timeAgo = (dateStr: string) => {
@@ -62,7 +62,7 @@ const MyAnalysesSection = () => {
     return (
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl text-foreground mb-8">Dine analyser</h2>
+          <h2 className="text-2xl md:text-3xl text-foreground mb-8">Dine favoritter</h2>
           <div className="relative">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 blur-[2px] opacity-50 pointer-events-none select-none">
               {[1, 2, 3, 4].map((i) => (
@@ -70,17 +70,17 @@ const MyAnalysesSection = () => {
               ))}
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <Clock className="w-10 h-10 text-muted-foreground mb-3" />
-              <h3 className="text-lg font-semibold text-foreground">Fortsett der du slapp</h3>
+              <Heart className="w-10 h-10 text-muted-foreground mb-3" />
+              <h3 className="text-lg font-semibold text-foreground">Ikke glem en bil du likte</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-                Logg inn for å se bilene du har analysert tidligere.
+                Logg inn for å lagre favoritter og sammenligne biler.
               </p>
               <Button
                 className="mt-4 gap-2"
                 variant="default"
                 onClick={() => setShowAuthModal(true)}
               >
-                Se historikk
+                Lagre favoritter
               </Button>
             </div>
           </div>
@@ -89,12 +89,12 @@ const MyAnalysesSection = () => {
     );
   }
 
-  // Logged in but no analyses — hide
-  if (cars.length === 0) return null;
+  // Logged in but no favorites — hide section
+  if (favorites.length === 0) return null;
 
   return (
-    <CarCarousel title="Dine analyser">
-      {cars.map((item) => {
+    <CarCarousel title="Dine favoritter">
+      {favorites.map((item) => {
         const car = item.car_data as any;
         const url = item.finn_url || `https://www.finn.no/mobility/item/${item.finn_code}`;
         return (
@@ -118,4 +118,4 @@ const MyAnalysesSection = () => {
   );
 };
 
-export default MyAnalysesSection;
+export default FavoritesSection;
