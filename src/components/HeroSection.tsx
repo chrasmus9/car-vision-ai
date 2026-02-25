@@ -75,7 +75,7 @@ const HeroSection = () => {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4 max-w-lg mx-auto">
-            BilSjekk.ai er et støtteverktøy for bilkjøp, men erstatter ikke profesjonell rådgivning. Alle beslutninger må baseres på egen research.
+            BruktbilSjekk er et støtteverktøy for bilkjøp, men erstatter ikke profesjonell rådgivning. Alle beslutninger må baseres på egen research.
           </p>
         </div>
       </div>

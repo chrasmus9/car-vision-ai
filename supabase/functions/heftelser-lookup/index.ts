@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'BilsjekkApp/1.0',
+          'User-Agent': 'BruktbilSjekkApp/1.0',
         },
       }
     );
