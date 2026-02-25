@@ -1,4 +1,5 @@
 import { Car } from "lucide-react";
+import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 
 const Footer = () => {
@@ -13,9 +14,11 @@ const Footer = () => {
             BruktbilSjekk
           </span>
         </div>
-        <p className="text-xs text-muted-foreground">
-          © 2026 bruktbilsjekk.no — Et støtteverktøy for bilkjøp.
-        </p>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <p>© 2026 bruktbilsjekk.no</p>
+          <Link to="/personvern" className="hover:text-foreground transition-colors">Personvern</Link>
+          <Link to="/vilkar" className="hover:text-foreground transition-colors">Vilkår</Link>
+        </div>
         <ThemeToggle />
       </div>
     </footer>
