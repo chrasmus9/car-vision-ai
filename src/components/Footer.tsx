@@ -10,11 +10,11 @@ const Footer = () => {
             <Car className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="text-sm font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
-            BilSjekk<span className="text-primary">.ai</span>
+            BruktbilSjekk
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
-          © 2026 BilSjekk.ai — Et støtteverktøy for bilkjøp.
+          © 2026 bruktbilsjekk.no — Et støtteverktøy for bilkjøp.
         </p>
         <ThemeToggle />
       </div>
