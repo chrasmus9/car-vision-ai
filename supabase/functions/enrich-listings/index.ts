@@ -95,9 +95,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { listings } = await req.json();
+    const body = await req.json();
+    const listings = Array.isArray(body?.listings) ? body.listings : [];
 
-    if (!Array.isArray(listings) || listings.length === 0) {
+    if (listings.length === 0) {
       return new Response(
         JSON.stringify({ success: true, data: {} }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

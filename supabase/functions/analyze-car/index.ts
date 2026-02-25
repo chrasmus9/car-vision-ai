@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -9,11 +11,27 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { carData, vegvesenData } = await req.json();
+    const { carData, vegvesenData, finnCode, finnUrl, recentData } = await req.json();
 
-    if (!carData) {
+    if (!carData || typeof carData !== 'object') {
       return new Response(
         JSON.stringify({ success: false, error: 'Car data is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate finnCode format (must be 9+ digit Finn code)
+    if (finnCode && !/^\d{9,}$/.test(String(finnCode))) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid Finn code format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate finnUrl if provided
+    if (finnUrl && !String(finnUrl).includes('finn.no')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid Finn URL' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -117,6 +135,32 @@ Svar KUN med JSON, ingen annen tekst.`;
     }
 
     console.log('AI analysis complete');
+
+    // Write to recent_analyses server-side using service role
+    if (finnCode && recentData) {
+      try {
+        const supabaseAdmin = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        );
+        await supabaseAdmin.from('recent_analyses').upsert({
+          finn_code: finnCode,
+          title: recentData.title,
+          price: recentData.price,
+          year: recentData.year,
+          mileage: recentData.mileage,
+          fuel: recentData.fuel,
+          location: recentData.location,
+          image_url: recentData.imageUrl,
+          overall_risk: analysis.overallRisk || 'low',
+          finn_url: finnUrl,
+          price_diff_percent: recentData.priceDiffPercent ?? null,
+        }, { onConflict: 'finn_code' });
+        console.log('Saved to recent_analyses server-side');
+      } catch (e) {
+        console.warn('Failed to save recent_analyses:', e);
+      }
+    }
 
     return new Response(
       JSON.stringify({ success: true, data: analysis }),

@@ -185,9 +185,26 @@ const Analysis = () => {
         // Step 3: AI Analysis + Search similar in parallel
         setLoadingStep("analyzing");
 
+        const priceNum2 = parseInt(car.price.replace(/\D/g, "")) || 0;
+
         const [aiResponse, searchResponse] = await Promise.all([
           supabase.functions.invoke("analyze-car", {
-            body: { carData: { ...car, textContent: raw.textContent }, vegvesenData: vegvesen },
+            body: {
+              carData: { ...car, textContent: raw.textContent },
+              vegvesenData: vegvesen,
+              finnCode,
+              finnUrl: url,
+              recentData: {
+                title: car.title,
+                price: car.price,
+                year: String(car.year),
+                mileage: car.mileage,
+                fuel: car.fuel,
+                location: car.location,
+                imageUrl: car.imageUrl,
+                priceDiffPercent: null, // will be updated after search completes
+              },
+            },
           }),
           supabase.functions.invoke("search-finn", {
             body: {
@@ -256,20 +273,7 @@ const Analysis = () => {
           }
         }
 
-        // Save to recent analyses
-        await supabase.from("recent_analyses").upsert({
-          finn_code: finnCode,
-          title: car.title,
-          price: car.price,
-          year: String(car.year),
-          mileage: car.mileage,
-          fuel: car.fuel,
-          location: car.location,
-          image_url: car.imageUrl,
-          overall_risk: aiResult.data.overallRisk || "low",
-          finn_url: url,
-          price_diff_percent: priceDiffPercent,
-        } as any, { onConflict: "finn_code" });
+        // recent_analyses is now written server-side by analyze-car edge function
 
         // Save to analysis cache
         await supabase.from("analysis_cache").upsert({

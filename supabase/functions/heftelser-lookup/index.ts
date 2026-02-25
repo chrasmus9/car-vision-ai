@@ -9,7 +9,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { regNr } = await req.json();
+    const body = await req.json();
+    const regNr = typeof body?.regNr === 'string' ? body.regNr : '';
 
     if (!regNr) {
       return new Response(

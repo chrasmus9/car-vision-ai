@@ -9,7 +9,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { make, model, yearFrom, yearTo, fuel } = await req.json();
+    const body = await req.json();
+    const make = typeof body?.make === 'string' ? body.make.substring(0, 50) : '';
+    const model = typeof body?.model === 'string' ? body.model.substring(0, 50) : '';
+    const yearFrom = typeof body?.yearFrom === 'number' ? body.yearFrom : undefined;
+    const yearTo = typeof body?.yearTo === 'number' ? body.yearTo : undefined;
+    const fuel = typeof body?.fuel === 'string' ? body.fuel.substring(0, 30) : undefined;
 
     if (!make || !model) {
       return new Response(
