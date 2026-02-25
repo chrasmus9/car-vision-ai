@@ -9,7 +9,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const body = await req.json();
+    const url = typeof body?.url === 'string' ? body.url : '';
 
     if (!url) {
       return new Response(

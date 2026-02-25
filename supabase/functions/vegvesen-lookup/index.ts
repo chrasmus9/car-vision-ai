@@ -9,7 +9,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { regNr, vin } = await req.json();
+    const body = await req.json();
+    const regNr = typeof body?.regNr === 'string' ? body.regNr : '';
+    const vin = typeof body?.vin === 'string' ? body.vin : '';
 
     if (!regNr && !vin) {
       return new Response(
