@@ -105,12 +105,20 @@ const Analysis = () => {
               setLoading(false);
               window.scrollTo({ top: 0, behavior: "smooth" });
 
-              // Ensure user_id is set on cached entry for logged-in user
+              // Ensure user_id is set on cached entry for logged-in user (server-side)
               if (user?.id && !cached.user_id) {
-                supabase.from("analysis_cache")
-                  .update({ user_id: user.id } as any)
-                  .eq("finn_code", finnCode)
-                  .then(() => {});
+                supabase.functions.invoke("save-analysis-cache", {
+                  body: {
+                    finn_code: finnCode,
+                    finn_url: url,
+                    car_data: cached.car_data,
+                    analysis_data: cached.analysis_data,
+                    vegvesen_data: cached.vegvesen_data,
+                    similar_listings: cached.similar_listings,
+                    price_stats: cached.price_stats,
+                    user_id: user.id,
+                  },
+                }).catch(() => {});
               }
               return;
             }
@@ -275,17 +283,19 @@ const Analysis = () => {
 
         // recent_analyses is now written server-side by analyze-car edge function
 
-        // Save to analysis cache
-        await supabase.from("analysis_cache").upsert({
-          finn_code: finnCode,
-          finn_url: url,
-          car_data: car as any,
-          analysis_data: aiResult.data as any,
-          vegvesen_data: vegvesen,
-          similar_listings: filteredListings,
-          price_stats: searchResult?.data?.stats || null,
-          user_id: user?.id || null,
-        } as any, { onConflict: "finn_code" });
+        // Save to analysis cache (server-side)
+        supabase.functions.invoke("save-analysis-cache", {
+          body: {
+            finn_code: finnCode,
+            finn_url: url,
+            car_data: car,
+            analysis_data: aiResult.data,
+            vegvesen_data: vegvesen,
+            similar_listings: filteredListings,
+            price_stats: searchResult?.data?.stats || null,
+            user_id: user?.id || null,
+          },
+        }).catch(e => console.warn("Cache save failed:", e));
 
       } catch (err: any) {
         console.error("Analysis error:", err);
