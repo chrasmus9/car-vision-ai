@@ -25,6 +25,11 @@ const Navbar = () => {
               Ny analyse
             </Button>
           </Link>
+          <Link to="/om-oss">
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              Om oss
+            </Button>
+          </Link>
           {user ? (
             <ProfileDropdown />
           ) : (

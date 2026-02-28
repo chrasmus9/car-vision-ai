@@ -16,6 +16,7 @@ const Footer = () => {
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <p>© 2026 bruktbilsjekk.no</p>
+          <Link to="/om-oss" className="hover:text-foreground transition-colors">Om oss</Link>
           <Link to="/personvern" className="hover:text-foreground transition-colors">Personvern</Link>
           <Link to="/vilkar" className="hover:text-foreground transition-colors">Vilkår</Link>
         </div>
