@@ -48,7 +48,7 @@ const RecentSection = () => {
   };
 
   return (
-    <CarCarousel title="Andre så nylig på">
+    <CarCarousel title="Nylig analyserte bruktbiler">
       {cars.map((car) => (
         <CarCarouselSlide key={car.finn_code}>
           <Link to={`/analyse?url=${encodeURIComponent(car.finn_url)}`}>
