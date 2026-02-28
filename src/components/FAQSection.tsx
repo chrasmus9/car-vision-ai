@@ -1,5 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 
 const faqs = [
   {
@@ -34,25 +34,33 @@ const faqSchema = {
   })),
 };
 
-const FAQSection = () => (
-  <section className="py-16 px-4">
-    <Helmet>
-      <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-    </Helmet>
-    <div className="max-w-3xl mx-auto space-y-8">
-      <h2 className="text-3xl md:text-4xl text-foreground text-center">Ofte stilte spørsmål</h2>
-      <Accordion type="single" collapsible className="w-full">
-        {faqs.map((f, i) => (
-          <AccordionItem key={i} value={`faq-${i}`}>
-            <AccordionTrigger className="text-left text-base">{f.q}</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground leading-relaxed">
-              {f.a}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </div>
-  </section>
-);
+const FAQSection = () => {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(faqSchema);
+    script.id = "faq-schema";
+    document.head.appendChild(script);
+    return () => { document.getElementById("faq-schema")?.remove(); };
+  }, []);
+
+  return (
+    <section className="py-16 px-4">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <h2 className="text-3xl md:text-4xl text-foreground text-center">Ofte stilte spørsmål</h2>
+        <Accordion type="single" collapsible className="w-full">
+          {faqs.map((f, i) => (
+            <AccordionItem key={i} value={`faq-${i}`}>
+              <AccordionTrigger className="text-left text-base">{f.q}</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                {f.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </section>
+  );
+};
 
 export default FAQSection;
