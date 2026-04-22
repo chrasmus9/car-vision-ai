@@ -20,16 +20,29 @@ Deno.serve(async (req) => {
     }
 
     // Extract finn code from URL or use directly
-    let finnUrl = url.trim();
+    let finnUrl = url.trim().substring(0, 500);
     if (/^\d+$/.test(finnUrl)) {
       finnUrl = `https://www.finn.no/mobility/item/${finnUrl}`;
     }
-    if (!finnUrl.includes('finn.no')) {
+
+    // SSRF protection: strict URL validation - only allow finn.no / www.finn.no over https
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(finnUrl);
+    } catch {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid Finn.no URL' }),
+        JSON.stringify({ success: false, error: 'Invalid URL format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const allowedHosts = new Set(['finn.no', 'www.finn.no']);
+    if (parsedUrl.protocol !== 'https:' || !allowedHosts.has(parsedUrl.hostname.toLowerCase())) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Only https://finn.no URLs are allowed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    finnUrl = parsedUrl.toString();
 
     console.log('Scraping Finn.no URL:', finnUrl);
 
